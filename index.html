@@ -234,7 +234,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.3.0";
+const APP_VERSION = "3.3.1";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -1358,7 +1358,7 @@ function charOffset(nodeEl, n, x){
   const inside = S.cur.off !== undefined && S.cur.arr[S.cur.i] === n;
   const off = inside ? S.cur.off : 0;
   const leftText = (n.neg?"−":"") + vd.slice(0, off);
-  const rightText = inside ? vd.slice(off) : "";
+  const rightText = vd.slice(off);
   const leftW = measure(leftText, font);
   const caretW = inside ? 4 : 0;
   const r = nodeEl.getBoundingClientRect();

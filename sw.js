@@ -1,4 +1,4 @@
-const C = "calc-v3.3.1";
+const C = "calc-v3.3.2";
 const A = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", e => {

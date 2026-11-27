@@ -234,7 +234,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.2.0";
+const APP_VERSION = "3.3.0";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -395,8 +395,30 @@ const konst = v=>({t:"const", v});
 const isOperand = n=>n && n.t !== "op";
 
 /* ================= ΔΡΟΜΕΑΣ ================= */
+function setInside(arr, i, off){
+  const n = arr[i];
+  const len = n.v.length;
+  if(off <= 0) S.cur = {arr, i};
+  else if(off >= len) S.cur = {arr, i:i+1};
+  else S.cur = {arr, i, off};
+}
+function splitNum(){
+  const c = S.cur;
+  if(c.off === undefined) return false;
+  const n = c.arr[c.i];
+  const left = n.v.slice(0, c.off);
+  const right = n.v.slice(c.off);
+  n.v = left;
+  const rn = num(right);
+  c.arr.splice(c.i+1, 0, rn);
+  S.cur = {arr:c.arr, i:c.i+1};
+  return true;
+}
 function right(){
-  const c = S.cur, n = c.arr[c.i];
+  const c = S.cur;
+  if(c.off !== undefined){ setInside(c.arr, c.i, c.off+1); return; }
+  const n = c.arr[c.i];
+  if(n && n.t === "num" && n.v.length > 1){ setInside(c.arr, c.i, 1); return; }
   if(n && fieldsOf(n)){ c.arr = n.f[fieldsOf(n)[0]]; c.i = 0; return; }
   if(c.i < c.arr.length){ c.i++; return; }
   const m = c.arr.meta;
@@ -407,8 +429,10 @@ function right(){
 }
 function left(){
   const c = S.cur;
+  if(c.off !== undefined){ setInside(c.arr, c.i, c.off-1); return; }
   if(c.i > 0){
     const n = c.arr[c.i-1];
+    if(n.t === "num" && n.v.length > 1){ setInside(c.arr, c.i-1, n.v.length-1); return; }
     if(fieldsOf(n)){
       const fs = fieldsOf(n), l = n.f[fs[fs.length-1]];
       c.arr = l; c.i = l.length;
@@ -459,15 +483,16 @@ function curPath(){
   }
   return steps;
 }
-function setCurPath(steps, i){
+function setCurPath(steps, i, off){
   let a = S.root;
   for(const [idx,f] of steps){
     if(!a[idx] || !a[idx].f) break;
     a = a[idx].f[f];
   }
   S.cur = {arr:a, i:Math.min(i, a.length)};
+  if(off !== undefined && a[S.cur.i] && a[S.cur.i].t === "num") S.cur.off = off;
 }
-const snapshot = ()=>({t:serialize(), p:curPath(), i:S.cur.i});
+const snapshot = ()=>({t:serialize(), p:curPath(), i:S.cur.i, off:S.cur.off});
 function pushUndo(){
   undoStack.push(snapshot());
   if(undoStack.length > 80) undoStack.shift();
@@ -479,7 +504,7 @@ function undo(){
   redoStack.push(snapshot());
   const s = undoStack.pop();
   S.root = deserialize(s.t);
-  setCurPath(s.p, s.i);
+  setCurPath(s.p, s.i, s.off);
   S.fresh = false; S.err = false;
   render(); undoBtns(); vib();
 }
@@ -488,7 +513,7 @@ function redo(){
   undoStack.push(snapshot());
   const s = redoStack.pop();
   S.root = deserialize(s.t);
-  setCurPath(s.p, s.i);
+  setCurPath(s.p, s.i, s.off);
   S.fresh = false; S.err = false;
   render(); undoBtns(); vib();
 }
@@ -506,6 +531,7 @@ const saveExpr = debounce(()=>{
 function ins(n, enterField){
   pushUndo();
   beginEdit("val");
+  splitNum();
   attach(n, S.cur.arr);
   S.cur.arr.splice(S.cur.i, 0, n);
   S.cur.i++;
@@ -515,30 +541,49 @@ function ins(n, enterField){
 function digit(d){
   pushUndo();
   beginEdit("val");
-  const p = S.cur.arr[S.cur.i-1];
+  const c = S.cur;
+  if(c.off !== undefined){
+    const n = c.arr[c.i];
+    if(n.v.length < 18){
+      n.v = n.v.slice(0,c.off) + d + n.v.slice(c.off);
+      setInside(c.arr, c.i, c.off+1);
+    }
+    render(); return;
+  }
+  const p = c.arr[c.i-1];
   if(p && p.t === "num" && p.v.length < 18){ p.v += d; }
   else {
     const n = num(d);
-    S.cur.arr.splice(S.cur.i, 0, n);
-    S.cur.i++;
+    c.arr.splice(c.i, 0, n);
+    c.i++;
   }
   render();
 }
 function dot(){
   pushUndo();
   beginEdit("val");
-  const p = S.cur.arr[S.cur.i-1];
+  const c = S.cur;
+  if(c.off !== undefined){
+    const n = c.arr[c.i];
+    if(!n.v.includes(".")){
+      n.v = n.v.slice(0,c.off) + "." + n.v.slice(c.off);
+      setInside(c.arr, c.i, c.off+1);
+    }
+    render(); return;
+  }
+  const p = c.arr[c.i-1];
   if(p && p.t === "num"){ if(!p.v.includes(".")) p.v += "."; }
   else {
     const n = num("0.");
-    S.cur.arr.splice(S.cur.i, 0, n);
-    S.cur.i++;
+    c.arr.splice(c.i, 0, n);
+    c.i++;
   }
   render();
 }
 function op(v){
   pushUndo();
   beginEdit("op");
+  splitNum();
   const p = S.cur.arr[S.cur.i-1];
   if(p && p.t === "op"){
     if(v === "−" && p.v !== "−" && p.v !== "+"){
@@ -565,6 +610,7 @@ function neg(){
 function powKey(exp){
   pushUndo();
   beginEdit("val");
+  splitNum();
   const c = S.cur, p = c.arr[c.i-1];
   const n = mk("pow");
   if(exp !== undefined) n.f.e = [num(exp)];
@@ -588,6 +634,7 @@ function powKey(exp){
 function powBase(baseNode){
   pushUndo();
   beginEdit("val");
+  splitNum();
   const n = mk("pow");
   n.f.b = [baseNode];
   attach(n, S.cur.arr);
@@ -600,6 +647,15 @@ function backspace(){
   pushUndo();
   S.fresh = false; S.err = false;
   const c = S.cur;
+  if(c.off !== undefined){
+    const n = c.arr[c.i];
+    if(c.off > 0){
+      n.v = n.v.slice(0,c.off-1) + n.v.slice(c.off);
+      if(n.v.length === 0){ c.arr.splice(c.i,1); S.cur = {arr:c.arr, i:c.i}; }
+      else setInside(c.arr, c.i, c.off-1);
+    }
+    render(); return;
+  }
   if(c.i > 0){
     const p = c.arr[c.i-1];
     if(p.t === "num"){
@@ -632,6 +688,7 @@ function delNode(){
   pushUndo();
   S.fresh = false; S.err = false;
   const c = S.cur;
+  if(c.off !== undefined){ c.arr.splice(c.i,1); S.cur = {arr:c.arr, i:c.i}; render(); return; }
   if(c.i > 0){ c.arr.splice(c.i-1,1); c.i--; }
   else if(c.arr.meta){
     const m = c.arr.meta, pi = m.parent.indexOf(m.node);
@@ -1025,7 +1082,7 @@ function renderArr(arr){
   const f = document.createDocumentFragment();
   const here = S.cur.arr === arr;
   for(let i=0;i<arr.length;i++){
-    if(here && S.cur.i === i) f.appendChild(caretEl());
+    if(here && S.cur.i === i && S.cur.off === undefined) f.appendChild(caretEl());
     f.appendChild(renderNode(arr[i]));
   }
   if(here && S.cur.i === arr.length) f.appendChild(caretEl());
@@ -1039,10 +1096,19 @@ function renderArr(arr){
 function renderNode(n){
   let e;
   switch(n.t){
-    case "num":
+    case "num":{
       e = el("span","n");
-      e.textContent = (n.neg?"−":"")+String(n.v).replace(/-/g,"−");
+      const vd = String(n.v).replace(/-/g,"−");
+      const inside = S.cur.off !== undefined && S.cur.arr[S.cur.i] === n;
+      if(inside){
+        const l = el("span"); l.textContent = (n.neg?"−":"")+vd.slice(0,S.cur.off);
+        const r = el("span"); r.textContent = vd.slice(S.cur.off);
+        e.append(l, caretEl(), r);
+      } else {
+        e.textContent = (n.neg?"−":"")+vd;
+      }
       break;
+    }
     case "const":
       e = el("span","n");
       e.textContent = n.v;
@@ -1283,6 +1349,38 @@ function render(){
 }
 
 /* ================= TAP -> ΘΕΣΗ ΔΡΟΜΕΑ ================= */
+const mctx = document.createElement("canvas").getContext("2d");
+function measure(ch, font){ mctx.font = font; return mctx.measureText(ch).width; }
+function charOffset(nodeEl, n, x){
+  const cs = getComputedStyle(nodeEl);
+  const font = cs.fontSize+" "+cs.fontFamily;
+  const vd = String(n.v).replace(/-/g,"−");
+  const inside = S.cur.off !== undefined && S.cur.arr[S.cur.i] === n;
+  const off = inside ? S.cur.off : 0;
+  const leftText = (n.neg?"−":"") + vd.slice(0, off);
+  const rightText = inside ? vd.slice(off) : "";
+  const leftW = measure(leftText, font);
+  const caretW = inside ? 4 : 0;
+  const r = nodeEl.getBoundingClientRect();
+  const rel = x - r.left;
+  const negAdj = n.neg ? 1 : 0;
+  if(rel <= leftW){
+    let acc = 0, count = 0;
+    for(const ch of leftText){
+      const w = measure(ch, font);
+      if(rel > acc + w/2){ acc += w; count++; } else break;
+    }
+    return Math.max(0, count - negAdj);
+  }
+  if(inside && rel <= leftW + caretW) return off;
+  const rel2 = rel - leftW - caretW;
+  let acc = 0, count = 0;
+  for(const ch of rightText){
+    const w = measure(ch, font);
+    if(rel2 > acc + w/2){ acc += w; count++; } else break;
+  }
+  return off + count;
+}
 function indexInSlot(wrapper, x){
   let i = 0;
   for(const c of wrapper.children){
@@ -1300,6 +1398,17 @@ function placeFromTap(x, y){
     if(!slotWrap && t._slot) slotWrap = t;
     if(!nodeEl && t._node) nodeEl = t;
     t = t.parentElement;
+  }
+  if(nodeEl && nodeEl._node && nodeEl._node.t === "num"){
+    const n = nodeEl._node;
+    const par = nodeEl.parentElement;
+    const arr = par && par._slot;
+    if(arr){
+      const i = arr.indexOf(n);
+      setInside(arr, i, charOffset(nodeEl, n, x));
+      S.fresh = false; S.err = false; vib(4); render();
+      return;
+    }
   }
   if(slotWrap){
     S.cur = {arr:slotWrap._slot, i:indexInSlot(slotWrap, x)};
@@ -2261,7 +2370,7 @@ fitVV();
     const e = JSON.parse(localStorage.getItem("sciCalc3.expr"));
     if(e && e.t){
       S.root = deserialize(e.t);
-      setCurPath(e.p||[], e.i||0);
+      setCurPath(e.p||[], e.i||0, e.off);
     }
   }catch(err){}
   applyTheme();

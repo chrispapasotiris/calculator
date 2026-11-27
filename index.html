@@ -117,6 +117,14 @@ button{font-family:inherit;color:inherit}
 .der>.df{display:inline-flex;flex-direction:column;align-items:center;font-size:.8em;margin-right:2px}
 .der>.df>span:last-child{border-top:2px solid var(--keytx);padding:0 3px}
 .der>.ev{border-left:2px solid var(--accent1);align-self:stretch;margin-left:2px}
+
+.unc{display:inline-flex;align-items:center;gap:3px}
+.unc>.pm{color:var(--dim)}
+.mtx{display:inline-flex;align-items:center;margin:0 3px}
+.mtx>.mb{display:inline-grid;gap:2px 8px;padding:2px 6px;border-left:2px solid var(--accent1);border-right:2px solid var(--accent1);border-radius:4px}
+.sec{color:var(--accent2);font-size:13px;margin:14px 0 4px;letter-spacing:.5px}
+.row textarea{width:100%;background:var(--key);color:var(--keytx);border:1px solid var(--keybr);border-radius:9px;padding:8px;font-size:14px;font-family:inherit}
+  
 #keys{flex:1;display:flex;flex-direction:column;gap:7px;padding:4px 10px calc(8px + env(safe-area-inset-bottom));min-height:0}
 .sci{flex:1.22;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(5,1fr);gap:7px}
 .dig{flex:1;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);gap:7px}
@@ -239,7 +247,7 @@ const APP_VERSION = "3.4.0";
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
   theme:"Διάστημα", angle:"DEG", fmt:"AUTO", sd:0, base:"DEC",
-  dms:false, prec:10, group:true, sound:true, vib:true, motion:true
+  dms:false, prec:10, sig:0, group:true, sound:true, vib:true, motion:true
 };
 const S = {
   root:[], cur:null, shift:false, hyp:false, fresh:false,
@@ -354,12 +362,17 @@ function applyTheme(){
 const FMAP = {
   frac:["n","d"], mixed:["w","n","d"], pow:["b","e"],
   sqrt:["r"], root:["i","r"], paren:["b"], abs:["b"],
-  int:["lo","hi","b"], der:["b","p"], sum:["lo","hi","b"], dms:["d","m","s"]
+  int:["lo","hi","b"], der:["b","p"], sum:["lo","hi","b"], dms:["d","m","s"],
+  unc:["v","u"]
 };
 const FN = {
   sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,
   sinh:1,cosh:1,tanh:1,asinh:1,acosh:1,atanh:1,
-  ln:1,log:1,logxy:2,nCr:2,nPr:2
+  ln:1,log:1,logxy:2,nCr:2,nPr:2,
+  gamma:1,erf:1,erfc:1,bessj0:1,bessj1:1,zeta:1,li2:1,
+  re:1,im:1,conj:1,arg:1,complex:2,
+  det:1,inv:1,tr:1,dot:2,cross:2,
+  and:2,or:2,xor:2,shl:2,shr:2,deg:1,rad:1
 };
 function fieldsOf(n){
   if(n.t === "fn") return FN[n.v] === 2 ? ["a","b"] : ["a"];
@@ -801,14 +814,14 @@ function evArr(arr, env){
     const t = tk[p];
     if(!t) throw E_SYN;
     if(t.op){
-      if(t.op==="−"||t.op==="+"){ p++; const v = atom(); return t.op==="−"?-v:v; }
+      if(t.op==="−"||t.op==="+"){ p++; const v = atom(); return t.op==="−"?negv(v):v; }
       throw E_SYN;
     }
     p++;
     let v = evNode(t.node, env);
     if(t.posts) for(const po of t.posts){
-      if(po === "!") v = fact(v);
-      else v = v/100;
+      if(po === "!") v = fact(numOf(v));
+      else v = binop("×",v,0.01);
     }
     return v;
   }
@@ -816,7 +829,7 @@ function evArr(arr, env){
     let l = atom();
     while(tk[p] && tk[p].op && prec(tk[p].op) >= min){
       const o = tk[p++].op, r = expr(prec(o)+1);
-      l = o==="+"?l+r : o==="−"?l-r : o==="×"?l*r : o==="÷"?l/r : l%r;
+      l = binop(o,l,r);
     }
     return l;
   }
@@ -836,6 +849,7 @@ function evNode(n, env){
     case "const":
       if(n.v === "π") return Math.PI;
       if(n.v === "e") return Math.E;
+      if(n.v === "i") return cx(0,1);
       if(n.v === "∞") return Infinity;
       if(n.v === "Ans") return S.ans;
       if(n.v === "M") return S.mem;
@@ -843,12 +857,12 @@ function evNode(n, env){
       if(n.v === "Y") return env.Y !== undefined ? env.Y : S.vy;
       if(CV[n.v] !== undefined) return CV[n.v];
       throw E_SYN;
-    case "frac": return E(n.f.n)/E(n.f.d);
+    case "frac": return binop("÷",E(n.f.n),E(n.f.d));
     case "mixed":{
       const w = n.f.w.length ? E(n.f.w) : 0;
       return w + E(n.f.n)/E(n.f.d);
     }
-    case "pow": return Math.pow(E(n.f.b), E(n.f.e));
+    case "pow": return powv(E(n.f.b), E(n.f.e));
     case "sqrt":{
       const v = Math.sqrt(E(n.f.r));
       if(Number.isNaN(v)) throw E_DOM;
@@ -861,8 +875,10 @@ function evNode(n, env){
       if(Number.isNaN(v)) throw E_DOM;
       return v;
     }
+    case "unc":{const v=numOf(E(n.f.v)),u=Math.abs(numOf(E(n.f.u)));return{k:"q",v,u};}
+    case "mat":return{k:"m",a:n.a.map(r=>r.slice())};
     case "paren": return E(n.f.b);
-    case "abs": return Math.abs(E(n.f.b));
+    case "abs":{const v=E(n.f.b);if(isC(v))return cabs(v);if(isQ(v))return{k:"q",v:Math.abs(v.v),u:v.u};return Math.abs(numOf(v));}
     case "dms":{
       const d = n.f.d.length?E(n.f.d):0;
       const m = n.f.m.length?E(n.f.m):0;
@@ -871,7 +887,11 @@ function evNode(n, env){
       return d + sg*(m/60 + s/3600);
     }
     case "fn":{
-      const a = E(n.f.a), b = n.f.b?E(n.f.b):0, k = angK();
+      const args=[E(n.f.a)]; if(n.f.b) args.push(E(n.f.b));
+      if(NEWFN.has(n.v)) return newfn(n.v,args);
+      const a = args[0], b = n.f.b?args[1]:0, k = angK();
+      if(isC(a)||isC(b)) return cfn(n.v,toC(a));
+      if(isQ(a)) return qfn(n.v,a,env);
       let r;
       switch(n.v){
         case "sin": r = cl(Math.sin(a*k)); break;
@@ -914,7 +934,7 @@ function evNode(n, env){
     case "sum":{
       const st = Math.round(E(n.f.lo)), en = E(n.f.hi);
       const prod = n.v === "Π";
-      let acc = prod?1:0;
+      let acc = prod?1:0, lastT = 0;
       if(en === Infinity){
         for(let k=st;k<st+50000;k++){
           const t = evArr(n.f.b, Object.assign({},env,{X:k}));
@@ -927,6 +947,9 @@ function evNode(n, env){
           } else {
             acc += t;
             if(Math.abs(t) < 1e-13) break;
+            const ratio = t/(lastT||t);
+            if(k>st+8 && Math.abs(ratio)<0.999 && Math.abs(ratio)>0){ acc += t*ratio/(1-ratio); break; }
+            lastT = t;
           }
         }
         return acc;
@@ -953,7 +976,7 @@ function simpsonSub(f, a, b, side){
   const g = side==="lo"
     ? t=>f(a + L*t*t)*2*L*t
     : t=>f(b - L*t*t)*2*L*t;
-  return simpsonPlain(g, 0, 1, 2000);
+  return quad(g, 0, 1);
 }
 function simpson(f, a, b, n){
   const fa = f(a), fb = f(b);
@@ -973,22 +996,23 @@ function integ(lo, hi, f){
     return integ(-Infinity,0,f) + integ(0,Infinity,f);
   if(hi === Infinity){
     const g = t=>f(lo + t/(1-t))/((1-t)*(1-t));
-    const r = simpson(g, 0, 1-1e-7, 2000);
+    const r = quad(g, 0, 1-1e-7);
     if(!isFinite(r) || Math.abs(r) > 1e12) throw E_DIV;
     return r;
   }
   if(lo === -Infinity){
     const g = t=>f(hi - t/(1-t))/((1-t)*(1-t));
-    const r = simpson(g, 0, 1-1e-7, 2000);
+    const r = quad(g, 0, 1-1e-7);
     if(!isFinite(r) || Math.abs(r) > 1e12) throw E_DIV;
     return r;
   }
-  return simpson(f, lo, hi, 1000);
+  return quad(f, lo, hi);
 }
 function computeLive(){
   try{
     const v = evArr(S.root, {});
-    if(typeof v !== "number" || Number.isNaN(v)){ lastErr = E_DOM; return null; }
+    if(typeof v === "number" && Number.isNaN(v)){ lastErr = E_DOM; return null; }
+    if(v && typeof v === "object" && isQ(v) && Number.isNaN(v.v)){ lastErr = E_DOM; return null; }
     return v;
   }catch(e){
     lastErr = typeof e === "string" ? e : E_SYN;
@@ -1003,6 +1027,164 @@ function liveCached(key){
   return liveVal;
 }
 
+
+
+/* ================= ΜΗΧΑΝΗ v5: τύποι τιμών ================= */
+const isC=v=>v&&v.k==="c", isM=v=>v&&v.k==="m", isQ=v=>v&&v.k==="q";
+const numOf=v=>typeof v==="number"?v:isQ(v)?v.v:isC(v)?(Math.abs(v.im)<1e-12?v.re:NaN):NaN;
+const cx=(re,im)=>({k:"c",re,im});
+const toC=v=>isC(v)?v:cx(numOf(v),0);
+function cadd(a,b){return cx(a.re+b.re,a.im+b.im);}
+function csub(a,b){return cx(a.re-b.re,a.im-b.im);}
+function cmul(a,b){return cx(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);}
+function cdiv(a,b){const d=b.re*b.re+b.im*b.im;return cx((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d);}
+function cabs(a){return Math.hypot(a.re,a.im);}
+function carg(a){return Math.atan2(a.im,a.re);}
+function cconj(a){return cx(a.re,-a.im);}
+function cexp(a){const e=Math.exp(a.re);return cx(e*Math.cos(a.im),e*Math.sin(a.im));}
+function clog(a){return cx(Math.log(cabs(a)),carg(a));}
+function cpow(a,b){return cexp(cmul(b,clog(a)));}
+function csin(a){return cx(Math.sin(a.re)*Math.cosh(a.im),Math.cos(a.re)*Math.sinh(a.im));}
+function ccos(a){return cx(Math.cos(a.re)*Math.cosh(a.im),-Math.sin(a.re)*Math.sinh(a.im));}
+function ctan(a){return cdiv(csin(a),ccos(a));}
+function cfn(name,a){switch(name){case"sin":return csin(a);case"cos":return ccos(a);case"tan":return ctan(a);case"ln":return clog(a);case"sqrt":return cpow(a,cx(0.5,0));case"abs":return cabs(a);default:throw E_DOM;}}
+function madd(a,b,s){return{k:"m",a:a.a.map((r,i)=>r.map((x,j)=>x+s*b.a[i][j]))};}
+function mmul(a,b){const n=a.a.length,p=b.a.length,q=b.a[0].length;const o=Array.from({length:n},()=>Array(q).fill(0));for(let i=0;i<n;i++)for(let j=0;j<q;j++)for(let k=0;k<p;k++)o[i][j]+=a.a[i][k]*b.a[k][j];return{k:"m",a:o};}
+function mdet(m){const n=m.a.length;const a=m.a.map(r=>r.slice());let d=1;for(let i=0;i<n;i++){let p=i;for(let r=i+1;r<n;r++)if(Math.abs(a[r][i])>Math.abs(a[p][i]))p=r;if(Math.abs(a[p][i])<1e-14)return 0;if(p!==i){const t=a[i];a[i]=a[p];a[p]=t;d=-d;}d*=a[i][i];for(let r=i+1;r<n;r++){const f=a[r][i]/a[i][i];for(let c=i;c<n;c++)a[r][c]-=f*a[i][c];}}return d;}
+function minv(m){const n=m.a.length;const a=m.a.map((r,i)=>r.concat(Array.from({length:n},(_,j)=>i===j?1:0)));for(let i=0;i<n;i++){let p=i;for(let r=i+1;r<n;r++)if(Math.abs(a[r][i])>Math.abs(a[p][i]))p=r;if(Math.abs(a[p][i])<1e-14)throw E_DOM;const t=a[i];a[i]=a[p];a[p]=t;const d=a[i][i];for(let c=0;c<2*n;c++)a[i][c]/=d;for(let r=0;r<n;r++){if(r===i)continue;const f=a[r][i];for(let c=0;c<2*n;c++)a[r][c]-=f*a[i][c];}}return{k:"m",a:a.map(r=>r.slice(n))};}
+function mtr(m){return{k:"m",a:m.a[0].map((_,j)=>m.a.map(r=>r[j]))};}
+function binopNum(o,l,r){return o==="+"?l+r:o==="−"?l-r:o==="×"?l*r:o==="÷"?l/r:l%r;}
+function qop(o,a,b){const av=numOf(a),bv=numOf(b);const f=(x,y)=>binopNum(o,x,y);const v=f(av,bv);const h=1e-6*Math.max(1,Math.abs(av));const da=(f(av+h,bv)-f(av-h,bv))/(2*h);let u=da*da*Math.pow(isQ(a)?a.u:0,2);if(b!==undefined){const hb=1e-6*Math.max(1,Math.abs(bv));const db=(f(av,bv+hb)-f(av,bv-hb))/(2*hb);u+=db*db*Math.pow(isQ(b)?b.u:0,2);}return{k:"q",v,u:Math.sqrt(u)};}
+function binop(o,l,r){
+  if(isM(l)||isM(r)){if(!isM(l)||!isM(r))throw E_DOM;if(o==="×")return mmul(l,r);if(o==="÷")return mmul(l,minv(r));if(o==="+")return madd(l,r,1);if(o==="−")return madd(l,r,-1);throw E_DOM;}
+  if(isC(l)||isC(r)){const a=toC(l),b=toC(r);if(o==="+")return cadd(a,b);if(o==="−")return csub(a,b);if(o==="×")return cmul(a,b);if(o==="÷")return cdiv(a,b);throw E_DOM;}
+  if(isQ(l)||isQ(r))return qop(o,l,r);
+  return binopNum(o,l,r);
+}
+function negv(v){return isC(v)?cx(-v.re,-v.im):isQ(v)?{k:"q",v:-v.v,u:v.u}:isM(v)?{k:"m",a:v.a.map(r=>r.map(x=>-x))}:-v;}
+function powv(a,b){
+  if(isM(a)){let n=Math.round(numOf(b));let base=a;if(n<0){base=minv(a);n=-n;}let r={k:"m",a:a.a.map((row,i)=>row.map((_,j)=>i===j?1:0))};for(let i=0;i<n;i++)r=mmul(r,base);return r;}
+  if(isC(a)||isC(b))return cpow(toC(a),toC(b));
+  if(isQ(a)){const av=a.v,bv=numOf(b);return{k:"q",v:Math.pow(av,bv),u:Math.abs(bv*Math.pow(av,bv-1))*a.u};}
+  return Math.pow(a,numOf(b));
+}
+function qfn(name,a,env){const av=a.v;const f=x=>{try{return numOf(evNode({t:"fn",v:name,f:{a:[num(x)]}},env));}catch(e){return NaN;}};const h=1e-6*Math.max(1,Math.abs(av));const d=(f(av+h)-f(av-h))/(2*h);return{k:"q",v:f(av),u:Math.abs(d)*a.u};}
+const LG=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+function lgamma(z){if(z<0.5)return Math.log(Math.PI/Math.sin(Math.PI*z))-lgamma(1-z);z-=1;let x=LG[0];for(let i=1;i<9;i++)x+=LG[i]/(z+i);const t=z+7.5;return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x);}
+function gamma(z){if(z<0.5)return Math.PI/(Math.sin(Math.PI*z)*gamma(1-z));z-=1;let x=LG[0];for(let i=1;i<9;i++)x+=LG[i]/(z+i);const t=z+7.5;return Math.sqrt(2*Math.PI)*Math.pow(t,z+0.5)*Math.exp(-t)*x;}
+function gammp(a,x){if(x<0||a<=0)throw E_DOM;if(x===0)return 0;if(x<a+1){let ap=a,s=1/a,d=s;for(let i=0;i<10000;i++){ap++;d*=x/ap;s+=d;if(Math.abs(d)<Math.abs(s)*1e-15)break;}return s*Math.exp(-x+a*Math.log(x)-lgamma(a));}let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<10000;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const de=d*c;h*=de;if(Math.abs(de-1)<1e-15)break;}return 1-Math.exp(-x+a*Math.log(x)-lgamma(a))*h;}
+function erf(x){const s=x>=0?1:-1;return s*gammp(0.5,x*x);}
+function erfc(x){return x>=0?1-gammp(0.5,x*x):1+gammp(0.5,x*x);}
+function bessj0(x){const ax=Math.abs(x);if(ax<8){const y=x*x;const a1=57568490574+y*(-13362590354+y*(651619640.7+y*(-11214424.18+y*(77392.33017+y*(-184.9052456)))));const a2=57568490411+y*(1029532985+y*(9494680.718+y*(59272.64853+y*(267.8532712+y))));return a1/a2;}const z=8/ax,y=z*z,xx=ax-0.785398164;const a1=1+y*(-0.1098628627e-2+y*(0.2734510407e-4+y*(-0.2073370639e-5+y*0.2093887211e-6)));const a2=-0.1562499995e-1+y*(0.1430488765e-3+y*(-0.6911147651e-5+y*(0.7621095161e-6+y*(-0.934935152e-7))));return Math.sqrt(0.636619772/ax)*(Math.cos(xx)*a1-z*Math.sin(xx)*a2);}
+function bessj1(x){const ax=Math.abs(x);let ans;if(ax<8){const y=x*x;const a1=x*(72362614232+y*(-7895059235+y*(242396853.1+y*(-2972611.439+y*(15704.48260+y*(-30.16036606))))));const a2=144725228442+y*(2300535178+y*(18583304.74+y*(99447.43394+y*(376.9991397+y))));ans=a1/a2;}else{const z=8/ax,y=z*z,xx=ax-2.356194491;const a1=1+y*(0.183105e-2+y*(-0.3516396496e-4+y*(0.2457520174e-5+y*(-0.240337019e-6))));const a2=0.04687499995+y*(-0.2002690873e-3+y*(0.8449199096e-5+y*(-0.88228987e-6+y*0.105787412e-6)));ans=Math.sqrt(0.636619772/ax)*(Math.cos(xx)*a1-z*Math.sin(xx)*a2);if(x<0)ans=-ans;}return ans;}
+function zeta(s){if(s===1)throw E_DOM;const n=24;let d=Math.pow(3+Math.sqrt(8),n);d=(d+1/d)/2;let b=-1,c=-d,sm=0;for(let k=0;k<n;k++){c=b-c;sm+=c/Math.pow(k+1,s);b=(k+n)*(k-n)*b/((k+0.5)*(k+1));}return (sm/d)/(1-Math.pow(2,1-s));}
+function li2(z){if(z===0)return 0;if(z===1)return Math.PI*Math.PI/6;if(z===-1)return -Math.PI*Math.PI/12;if(z>1)throw E_DOM;if(z<-1)return -Math.PI*Math.PI/6-0.5*Math.pow(Math.log(-z),2)-li2(1/z);if(Math.abs(z)<=0.5){let s=0,t=z;for(let k=1;k<300;k++){const term=t/(k*k);s+=term;t*=z;if(Math.abs(term)<1e-17)break;}return s;}if(z<0)return 0.5*li2(z*z)-li2(-z);return Math.PI*Math.PI/6-Math.log(z)*Math.log(1-z)-li2(1-z);}
+const XK=[0.9914553711208126,0.9491079123427585,0.8648644233597691,0.7415311855993944,0.5860872354676911,0.4058451513773972,0.2077849550078985,0];
+const WK=[0.02293532201052922,0.06309209262997855,0.1047900103222502,0.1406532597155259,0.1690047266392679,0.1903505780647854,0.2044329400752989,0.2094821410847278];
+const XG=[0.9491079123427585,0.7415311855993944,0.4058451513773972,0];
+const WG=[0.1294849661688697,0.2797053914892766,0.3818300505051189,0.4179591836734694];
+function gk(f,a,b){const c=(a+b)/2,h=(b-a)/2,fc=f(c);let rk=WK[7]*fc,rg=WG[3]*fc;for(let j=0;j<7;j++){const x=XK[j]*h,f1=f(c-x),f2=f(c+x);rk+=WK[j]*(f1+f2);if(j%2===0)rg+=WG[j>>1]*(f1+f2);}return[rk*h,rg*h];}
+function quad(f,a,b,tol,depth){tol=tol||1e-11;depth=depth||0;const r=gk(f,a,b);if(Math.abs(r[0]-r[1])<tol||depth>14)return r[0];const m=(a+b)/2;return quad(f,a,m,tol/2,depth+1)+quad(f,m,b,tol/2,depth+1);}
+function bgcd(a,b){a=a<0n?-a:a;b=b<0n?-b:b;while(b){const t=a%b;a=b;b=t;}return a;}
+function rat(n,d){if(d===0n)throw E_DOM;if(d<0n){n=-n;d=-d;}const g=bgcd(n,d)||1n;return{n:n/g,d:d/g};}
+function radd(a,b){return rat(a.n*b.d+b.n*a.d,a.d*b.d);}
+function rsub(a,b){return rat(a.n*b.d-b.n*a.d,a.d*b.d);}
+function rmul(a,b){return rat(a.n*b.n,a.d*b.d);}
+function rdiv(a,b){return rat(a.n*b.d,a.d*b.n);}
+function rpow(a,k){if(k<0)return rat(a.d**BigInt(-k),a.n**BigInt(-k));return rat(a.n**BigInt(k),a.d**BigInt(k));}
+function decToRat(s){const neg=s.startsWith("-");if(neg)s=s.slice(1);const[i,f]=s.split(".");const den=10n**BigInt((f||"").length);const n=BigInt(i||"0")*den+BigInt(f||"0");return rat(neg?-n:n,den);}
+function evExact(arr){
+  if(!arr.length)return null;
+  const vals=[],ops=[];
+  for(const n of arr){
+    if(n.t==="op"){if(!["+","−","×","÷"].includes(n.v))return null;ops.push(n.v);continue;}
+    let r=null;
+    if(n.t==="num")r=decToRat((n.neg?"-":"")+n.v);
+    else if(n.t==="paren")r=evExact(n.f.b);
+    else if(n.t==="frac"){const a=evExact(n.f.n),b=evExact(n.f.d);if(!a||!b)return null;r=rdiv(a,b);}
+    else if(n.t==="pow"){const a=evExact(n.f.b),e=evExact(n.f.e);if(!a||!e||e.d!==1n)return null;r=rpow(a,Number(e.n));}
+    else return null;
+    if(!r)return null;
+    vals.push(r);
+  }
+  if(vals.length!==ops.length+1)return null;
+  const v2=[vals[0]],o2=[];
+  for(let i=0;i<ops.length;i++){
+    if(ops[i]==="×"||ops[i]==="÷"){const a=v2.pop();v2.push(ops[i]==="×"?rmul(a,vals[i+1]):rdiv(a,vals[i+1]));}
+    else{o2.push(ops[i]);v2.push(vals[i+1]);}
+  }
+  let acc=v2[0];
+  for(let i=0;i<o2.length;i++)acc=o2[i]==="+"?radd(acc,v2[i+1]):rsub(acc,v2[i+1]);
+  return acc;
+}
+function exactFrac(root){try{const r=evExact(root);if(!r)return null;return{n:Number(r.n),d:Number(r.d)};}catch(e){return null;}}
+function simplifyArr(arr){
+  const out=[];
+  for(let n of arr){
+    if(n.f)for(const f in n.f)n.f[f]=simplifyArr(n.f[f]);
+    if(n.t==="frac"){const a=evExact(n.f.n),b=evExact(n.f.d);if(a&&b&&b.n!==0n){const r=rdiv(a,b);n={t:"frac",f:{n:[num(r.n.toString())],d:[num(r.d.toString())]}};attach(n,arr);}}
+    if(n.t==="pow"){const e=evExact(n.f.e);if(e&&e.d===1n){if(e.n===1n){out.push(...n.f.b);continue;}if(e.n===0n){out.push(num(1));continue;}}}
+    out.push(n);
+  }
+  const res=[];
+  for(let i=0;i<out.length;i++){
+    const n=out[i];
+    if(n.t==="op"&&n.v==="×"&&out[i+1]&&out[i+1].t==="num"&&out[i+1].v==="1"&&!out[i+1].neg){i++;continue;}
+    if(n.t==="num"&&n.v==="1"&&!n.neg&&out[i+1]&&out[i+1].t==="op"&&out[i+1].v==="×"){continue;}
+    if(n.t==="op"&&n.v==="+"&&out[i+1]&&out[i+1].t==="num"&&out[i+1].v==="0"&&!out[i+1].neg){i++;continue;}
+    res.push(n);
+  }
+  return res;
+}
+function doSimplify(){pushUndo();S.root=simplifyArr(S.root);linkTree(S.root,null);S.cur={arr:S.root,i:S.root.length};render();toast("Απλοποίηση ολοκληρώθηκε");}
+function findRoot(f,a,b){let fa=f(a),fb=f(b);if(!isFinite(fa)||!isFinite(fb))throw E_DOM;if(fa*fb>0)throw E_DOM;for(let i=0;i<200;i++){const m=(a+b)/2,fm=f(m);if(Math.abs(fm)<1e-12||(b-a)<1e-12)return m;if(fa*fm<=0){b=m;fb=fm;}else{a=m;fa=fm;}}return (a+b)/2;}
+function polyRoots(cs){const n=cs.length-1;if(n<1)throw E_DOM;let rs=[];for(let i=0;i<n;i++){const ang=2*Math.PI*i/n;rs.push({re:0.9*Math.cos(ang)+0.1,im:0.9*Math.sin(ang)+0.1});}
+  for(let it=0;it<300;it++){let mx=0;for(let i=0;i<n;i++){const z=rs[i];let val={re:0,im:0};for(let j=0;j<=n;j++){val=cadd(cmul(val,z),cx(cs[j],0));}let den={re:1,im:0};for(let j=0;j<n;j++){if(j!==i)den=cmul(den,csub(z,rs[j]));}const dz=cdiv(val,den);rs[i]=csub(z,dz);mx=Math.max(mx,cabs(dz));}if(mx<1e-14)break;}
+  return rs.filter(r=>Math.abs(r.im)<1e-7).map(r=>r.re);}
+function mean(a){return a.reduce((s,x)=>s+x,0)/a.length;}
+function stdev(a){const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1));}
+function linfit(pts){const n=pts.length;const mx=mean(pts.map(p=>p[0])),my=mean(pts.map(p=>p[1]));let sxx=0,sxy=0,syy=0;for(const[x,y]of pts){sxx+=(x-mx)*(x-mx);sxy+=(x-mx)*(y-my);syy+=(y-my)*(y-my);}const b=sxy/sxx,a=my-b*mx;let ss=0;for(const[x,y]of pts){const e=y-(a+b*x);ss+=e*e;}const r2=1-ss/syy;const se=Math.sqrt(ss/(n-2)/sxx);return{a,b,r2,se};}
+function limitSeq(f){const s=[];for(let n=1;n<=12;n++)s.push(f(n));for(let i=0;i<s.length-2;i++){const a=s[i],b=s[i+1],c=s[i+2];const d=c-2*b+a;if(Math.abs(d)>1e-14)s[i]=c-(c-b)*(c-b)/d;}return s[s.length-3];}
+const NEWFN=new Set(["gamma","erf","erfc","bessj0","bessj1","zeta","li2","re","im","conj","arg","complex","det","inv","tr","dot","cross","and","or","xor","shl","shr","deg","rad"]);
+function newfn(name,args){
+  const a=args[0],b=args[1];const av=numOf(a),bv=numOf(b);
+  switch(name){
+    case"gamma":return gamma(av);
+    case"erf":return erf(av);
+    case"erfc":return erfc(av);
+    case"bessj0":return bessj0(av);
+    case"bessj1":return bessj1(av);
+    case"zeta":return zeta(av);
+    case"li2":return li2(av);
+    case"re":return isC(a)?a.re:av;
+    case"im":return isC(a)?a.im:0;
+    case"conj":return isC(a)?cconj(a):av;
+    case"arg":return isC(a)?carg(a):0;
+    case"complex":return cx(av,bv);
+    case"det":return mdet(a);
+    case"inv":return minv(a);
+    case"tr":return mtr(a);
+    case"dot":{if(!isM(a)||!isM(b))throw E_DOM;let s=0;for(let i=0;i<a.a.length;i++)for(let j=0;j<a.a[0].length;j++)s+=a.a[i][j]*b.a[i][j];return s;}
+    case"cross":{if(!isM(a)||!isM(b))throw E_DOM;const u=a.a.flat(),v=b.a.flat();if(u.length!==3||v.length!==3)throw E_DOM;return{k:"m",a:[[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]]};}
+    case"and":return Number(BigInt(Math.trunc(av))&BigInt(Math.trunc(bv)));
+    case"or":return Number(BigInt(Math.trunc(av))|BigInt(Math.trunc(bv)));
+    case"xor":return Number(BigInt(Math.trunc(av))^BigInt(Math.trunc(bv)));
+    case"shl":return Number(BigInt(Math.trunc(av))<<BigInt(Math.trunc(bv)));
+    case"shr":return Number(BigInt(Math.trunc(av))>>BigInt(Math.trunc(bv)));
+    case"deg":return av*180/Math.PI;
+    case"rad":return av*Math.PI/180;
+  }
+  throw E_SYN;
+}
+function fmtAny(v){if(v&&typeof v==="object"){if(isQ(v))return autoStr(v.v,D.prec)+" ± "+autoStr(v.u,D.prec);if(isC(v))return autoStr(v.re,D.prec)+(v.im<0?" − ":" + ")+autoStr(Math.abs(v.im),D.prec)+"i";if(isM(v))return"Πίνακας "+v.a.length+"×"+v.a[0].length;}return autoStr(numOf(v),D.prec);}
+function renderValue(v){
+  if(isQ(v)){const e=el("span","unc");const pm=el("span","pm");pm.textContent="±";e.append(txt(autoStr(v.v,D.prec)),pm,txt(autoStr(v.u,D.prec)));return e;}
+  if(isC(v)){const e=el("span","n");e.textContent=autoStr(v.re,D.prec)+(v.im<0?" − ":" + ")+autoStr(Math.abs(v.im),D.prec)+"i";return e;}
+  if(isM(v)){const e=el("span","mtx");const g=el("span","mb");g.style.gridTemplateColumns="repeat("+v.a[0].length+",auto)";for(const r of v.a)for(const x of r){const c=el("span");c.textContent=autoStr(x,6);g.appendChild(c);}e.appendChild(g);return e;}
+  const e=el("span","n");e.textContent=autoStr(numOf(v),D.prec);return e;
+}
+
+  
 /* ================= ΜΟΡΦΟΠΟΙΗΣΗ ================= */
 function strip(s){
   return s.includes(".") ? s.replace(/0+$/,"").replace(/\.$/,"") : s;
@@ -1031,6 +1213,7 @@ function engStr(v,p){
 function autoStr(v,p){
   if(Number.isNaN(v)) return "Σφάλμα";
   if(!isFinite(v)) return v>0?"∞":"−∞";
+  if(D.sig>0) return group(strip(String(parseFloat(v.toPrecision(D.sig)))).replace("-","−"));
   const a = Math.abs(v);
   if(v !== 0 && (a >= 1e12 || a < 1e-6)) return sciStr(v,p);
   return group(strip(String(parseFloat(v.toPrecision(p)))).replace("-","−"));
@@ -1304,7 +1487,7 @@ function scrollCaret(){
   if(cr.bottom > br.bottom-6) exprBox.scrollTop += cr.bottom-br.bottom+12;
   if(cr.top < br.top+6) exprBox.scrollTop -= br.top-cr.top+12;
 }
-function resultContent(v){
+function resultContent(v,ex){
   resEl.innerHTML = "";
   resEl.classList.remove("err");
   resEl.dataset.v = v === null ? "" : String(v);
@@ -1312,13 +1495,14 @@ function resultContent(v){
     resEl.textContent = S.root.length ? "" : "0";
     return;
   }
+  if(v && typeof v === "object"){ resEl.appendChild(renderValue(v)); return; }
   if(D.base !== "DEC"){
     const b = baseStr(v);
     if(b){ resEl.textContent = b; return; }
   }
   if(D.dms){ resEl.textContent = dmsStr(v); return; }
   if(D.sd > 0 && isFinite(v)){
-    const f = toFrac(v);
+    const f = ex || toFrac(v);
     if(f){
       if(D.sd === 2 && Math.abs(f.n) > f.d && f.d > 1){
         const sg = f.n<0?-1:1;
@@ -1377,7 +1561,11 @@ function render(){
     resEl.textContent = S.errMsg||"Σφάλμα";
     resEl.classList.add("err");
     resEl.dataset.v = "";
-  } else resultContent(liveCached(serialize()+"|"+D.angle+"|"+S.ans+"|"+S.mem+"|"+S.vx+"|"+S.vy));
+  } else {
+    const vv = liveCached(serialize()+"|"+D.angle+"|"+S.ans+"|"+S.mem+"|"+S.vx+"|"+S.vy);
+    const ex = (vv!==null && typeof vv==="number") ? exactFrac(S.root) : null;
+    resultContent(vv, ex);
+  }
   document.getElementById("sndbtn").innerHTML = D.sound?IC.sndOn:IC.sndOff;
   saveExpr();
 }

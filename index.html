@@ -234,7 +234,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.3.3";
+const APP_VERSION = "3.4.0";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -414,6 +414,34 @@ function splitNum(){
   S.cur = {arr:c.arr, i:c.i+1};
   return true;
 }
+
+
+function fracWrap(){
+  pushUndo();
+  beginEdit("val");
+  splitNum();
+  const c = S.cur, arr = c.arr, i = c.i;
+  const left = arr.slice(0,i), right = arr.slice(i);
+  const f = mk("frac");
+  if(!left.length && !right.length){
+    attach(f, arr);
+    arr.splice(i,0,f);
+    S.cur = {arr:f.f.n, i:0};
+    render(); return;
+  }
+  f.f.n = left; f.f.d = right;
+  f.f.n.meta = {node:f, field:"n", parent:arr};
+  f.f.d.meta = {node:f, field:"d", parent:arr};
+  for(const nd of left) attach(nd, f.f.n);
+  for(const nd of right) attach(nd, f.f.d);
+  attach(f, arr);
+  arr.splice(0, arr.length, f);
+  if(!right.length) S.cur = {arr:f.f.d, i:0};
+  else if(!left.length) S.cur = {arr:f.f.n, i:0};
+  else S.cur = {arr:f.f.d, i:f.f.d.length};
+  render();
+}
+  
 function right(){
   const c = S.cur;
   if(c.off !== undefined){ setInside(c.arr, c.i, c.off+1); return; }
@@ -724,7 +752,8 @@ const CV = {
   "R_K":25812.80745, "K_J":483597.8484e9, "μ_B":9.2740100783e-24,
   "μ_N":5.0507837461e-27, "rₑ":2.8179403262e-15, "a₀":5.29177210903e-11,
   "E_h":4.3597447222e-18, "R∞":10973731.56816, "F":96485.33212,
-  "V_m":0.02271095464, "k":1.380649e-23
+  "V_m":0.02271095464, "k":1.380649e-23,
+  "42":42
 };
 function fact(v){
   if(v < 0 || Math.abs(v-Math.round(v)) > 1e-9) throw E_DOM;
@@ -1507,7 +1536,7 @@ function applyIns(v){
   if(v === "(") return ins(mk("paren"),"b");
   if(v === ")") return closeParen();
   if(v === "abs") return ins(mk("abs"),"b");
-  if(v === "frac") return ins(mk("frac"),"n");
+  if(v === "frac") return fracWrap();
   if(v === "mixed") return ins(mk("mixed"),"w");
   if(v === "sqrt") return ins(mk("sqrt"),"r");
   if(v === "cbrt"){ const n = mk("root"); n.f.i = [num(3)]; return ins(n,"r"); }
@@ -1820,7 +1849,8 @@ const CNAMES = {
   "Φ₀":"Κβάντο μαγνητικής ροής", "R_K":"Σταθερά von Klitzing", "K_J":"Σταθερά Josephson",
   "μ_B":"Μαγνήτρον Bohr", "μ_N":"Πυρηνικό μαγνήτρον", "rₑ":"Κλασική ακτίνα ηλεκτρονίου",
   "a₀":"Ακτίνα Bohr", "E_h":"Ενέργεια Hartree", "R∞":"Σταθερά Rydberg",
-  "F":"Σταθερά Faraday", "V_m":"Γραμμομοριακός όγκος", "k":"Σταθερά Boltzmann"
+  "F":"Σταθερά Faraday", "V_m":"Γραμμομοριακός όγκος", "k":"Σταθερά Boltzmann",
+  "42":"The answer to Life, the Universe and Everything"
 };
 const CONV = {
   "Μήκος":{m:1,km:1000,cm:.01,mm:.001,"μm":1e-6,nm:1e-9,"Å":1e-10,mi:1609.344,ft:.3048,in:.0254},

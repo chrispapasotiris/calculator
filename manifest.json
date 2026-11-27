@@ -1,6 +1,6 @@
 {
-  "name": "Επιστημονικό Κομπιουτεράκι",
-  "short_name": "Κομπιουτεράκι",
+  "name": "Scientific Calculator",
+  "short_name": "Calculator",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

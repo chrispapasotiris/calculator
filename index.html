@@ -9,7 +9,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
-/* ============ ΘΕΜΑΤΑ ============ */
 :root{
   --bg1:#05070f; --bg2:#0b1226;
   --glow1:rgba(124,92,255,.16); --glow2:rgba(0,229,255,.10);
@@ -46,7 +45,6 @@ body[data-theme="Πορσελάνη"]{
   --sheet:rgba(250,248,242,.96); --shadow:rgba(60,50,30,.18);
   --bar:#0f766e;
 }
-/* ============ ΒΑΣΗ ============ */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overscroll-behavior:none}
 body{
@@ -57,54 +55,32 @@ body{
     radial-gradient(55% 40% at 90% 100%,var(--glow2),transparent 70%),
     linear-gradient(180deg,var(--bg1),var(--bg2));
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
-  touch-action:manipulation;
-  transition:background .5s,color .3s;
+  touch-action:manipulation;transition:background .5s,color .3s;
   padding-top:env(safe-area-inset-top);
 }
 input,textarea{user-select:text;-webkit-user-select:text}
 [hidden]{display:none!important}
 button{font-family:inherit;color:inherit}
-/* ============ ΠΑΝΩ ΜΠΑΡΑ ============ */
 #bar{display:flex;align-items:center;gap:4px;padding:6px 10px 0}
-.ibtn{
-  width:32px;height:32px;flex:none;border:none;border-radius:10px;
-  background:transparent;color:var(--dim);display:flex;align-items:center;justify-content:center;
-  transition:background .2s,color .2s,transform .1s;touch-action:none;
-}
+.ibtn{width:32px;height:32px;flex:none;border:none;border-radius:10px;background:transparent;color:var(--dim);display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .1s;touch-action:none}
 .ibtn:active{transform:scale(.9);background:var(--chip);color:var(--accent2)}
 .ibtn[disabled]{opacity:.3}
 .ibtn.spin svg{animation:rot 1s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
 #chips{flex:1;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px}
 #chips::-webkit-scrollbar{display:none}
-.chip{
-  flex:none;font-size:10px;letter-spacing:.8px;padding:4px 9px;border-radius:20px;
-  background:var(--chip);border:1px solid var(--chipbr);color:var(--accent2);
-}
+.chip{flex:none;font-size:10px;letter-spacing:.8px;padding:4px 9px;border-radius:20px;background:var(--chip);border:1px solid var(--chipbr);color:var(--accent2)}
 .chip.click{cursor:pointer}
-/* ============ ΟΘΟΝΗ ============ */
-#display{
-  margin:8px 10px;flex:0 0 auto;height:25vh;min-height:148px;
-  display:flex;flex-direction:column;border-radius:20px;
-  background:var(--disp);border:1px solid var(--dispbr);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  box-shadow:0 10px 34px var(--shadow);
-  padding:8px 12px;transition:background .4s,border-color .4s;
-}
+#display{margin:8px 10px;flex:0 0 auto;height:25vh;min-height:148px;display:flex;flex-direction:column;border-radius:20px;background:var(--disp);border:1px solid var(--dispbr);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 34px var(--shadow);padding:8px 12px;transition:background .4s,border-color .4s}
 #exprbox{flex:1;overflow:auto;padding:6px 2px;scrollbar-width:thin;scrollbar-color:var(--bar) transparent;touch-action:pan-x pan-y}
 #exprbox::-webkit-scrollbar{width:7px;height:7px}
 #exprbox::-webkit-scrollbar-track{background:transparent}
 #exprbox::-webkit-scrollbar-thumb{background:var(--bar);border-radius:4px}
 #expr{display:flex;min-width:100%}
 #exprin{margin-left:auto;display:inline-flex;align-items:center;font-size:24px;padding:2px 4px}
-#res{
-  font-size:38px;font-weight:600;color:var(--restx);min-height:46px;line-height:46px;
-  display:flex;justify-content:flex-end;align-items:center;gap:6px;
-  overflow-x:auto;white-space:nowrap;scrollbar-width:none;letter-spacing:.5px;touch-action:pan-x;
-}
+#res{font-size:38px;font-weight:600;color:var(--restx);min-height:46px;line-height:46px;display:flex;justify-content:flex-end;align-items:center;gap:6px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;letter-spacing:.5px;touch-action:pan-x}
 #res::-webkit-scrollbar{display:none}
 #res.err{color:var(--danger);font-size:20px;font-weight:500}
-/* ============ ΜΑΘΗΜΑΤΙΚΗ ΑΠΟΔΟΣΗ ============ */
 .slot{display:inline-flex;align-items:center}
 .empty{min-width:.7em;min-height:1.15em;border:1px dashed var(--dim);border-radius:4px;margin:0 2px;opacity:.6}
 .caret{display:inline-block;width:2px;height:1.25em;background:var(--accent2);margin:0 1px;flex:none;animation:bl 1s steps(2) infinite;border-radius:1px}
@@ -141,29 +117,17 @@ button{font-family:inherit;color:inherit}
 .der>.df{display:inline-flex;flex-direction:column;align-items:center;font-size:.8em;margin-right:2px}
 .der>.df>span:last-child{border-top:2px solid var(--keytx);padding:0 3px}
 .der>.ev{border-left:2px solid var(--accent1);align-self:stretch;margin-left:2px}
-/* ============ ΠΛΗΚΤΡΑ ============ */
 #keys{flex:1;display:flex;flex-direction:column;gap:7px;padding:4px 10px calc(8px + env(safe-area-inset-bottom));min-height:0}
 .sci{flex:1.22;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(5,1fr);gap:7px}
 .dig{flex:1;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);gap:7px}
-.k{
-  position:relative;overflow:hidden;border:1px solid var(--keybr);border-radius:14px;
-  background:var(--key);color:var(--keytx);font-size:16px;padding:1px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:0;
-  box-shadow:0 2px 0 var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);
-  transition:background .25s,border-color .25s,transform .08s,box-shadow .08s;
-  touch-action:none;
-}
+.k{position:relative;overflow:hidden;border:1px solid var(--keybr);border-radius:14px;background:var(--key);color:var(--keytx);font-size:16px;padding:1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:0;box-shadow:0 2px 0 var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);transition:background .25s,border-color .25s,transform .08s,box-shadow .08s;touch-action:none}
 .k:active{transform:translateY(1px) scale(.97);box-shadow:0 0 0 var(--shadow)}
 .k .sl{font-size:9px;line-height:9px;height:10px;color:var(--accent2);opacity:.85;transition:color .15s}
 .k.holding .sl{color:var(--restx);font-weight:700;opacity:1}
 .dig .k{font-size:22px}
 .k.fnk{font-size:12.5px;letter-spacing:.3px}
 .k.red{color:var(--danger)}
-.k.eq{
-  background:linear-gradient(135deg,var(--accent1),var(--accent2));
-  color:#04101c;font-weight:700;border:none;
-  box-shadow:0 3px 14px var(--glow1),0 2px 0 var(--shadow);
-}
+.k.eq{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#04101c;font-weight:700;border:none;box-shadow:0 3px 14px var(--glow1),0 2px 0 var(--shadow)}
 body[data-theme="Πορσελάνη"] .k.eq{color:#fff}
 .holdbar{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--accent2);opacity:.9;pointer-events:none}
 .k.eq .holdbar{background:rgba(255,255,255,.85)}
@@ -174,13 +138,8 @@ body[data-theme="Πορσελάνη"] .k.eq{color:#fff}
 @keyframes rip{to{transform:scale(3);opacity:0}}
 body.nomotion .ripple{display:none}
 body.nomotion *{animation:none!important;transition:none!important}
-/* ============ ΦΥΛΛΑ / MODAL / TOAST ============ */
 #sheet{position:fixed;left:0;right:0;top:0;height:var(--vvh,100%);background:rgba(0,0,0,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:30}
-#panel{
-  background:var(--sheet);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-top:1px solid var(--dispbr);border-radius:24px 24px 0 0;
-  max-height:calc(var(--vvh,84vh) - 10px);display:flex;flex-direction:column;box-shadow:0 -12px 40px var(--shadow);
-}
+#panel{background:var(--sheet);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--dispbr);border-radius:24px 24px 0 0;max-height:calc(var(--vvh,84vh) - 10px);display:flex;flex-direction:column;box-shadow:0 -12px 40px var(--shadow)}
 #tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 4px;scrollbar-width:none}
 #tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;font-size:12.5px;padding:8px 14px;border-radius:20px;border:1px solid var(--keybr);background:transparent;color:var(--dim)}
@@ -190,9 +149,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 #pbody::-webkit-scrollbar{width:7px}
 #pbody::-webkit-scrollbar-thumb{background:var(--bar);border-radius:4px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--keybr);font-size:14px}
-.row select,.row input[type=number],.row input[type=text]{
-  background:var(--key);color:var(--keytx);border:1px solid var(--keybr);border-radius:9px;padding:8px;font-size:16px;max-width:58%;
-}
+.row select,.row input[type=number],.row input[type=text]{background:var(--key);color:var(--keytx);border:1px solid var(--keybr);border-radius:9px;padding:8px;font-size:16px;max-width:58%}
 .row input[type=range]{flex:1;accent-color:var(--accent1)}
 .tgl{width:46px;height:26px;border-radius:13px;background:var(--key);border:1px solid var(--keybr);position:relative;flex:none;padding:0;transition:background .2s;touch-action:none}
 .tgl::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--dim);transition:left .18s,background .18s}
@@ -220,13 +177,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 #mcard .mrow button{flex:1;padding:13px;border-radius:12px;font-size:14px;border:1px solid var(--keybr);background:var(--key)}
 #mcard .mrow button.go{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#04101c;border:none;font-weight:700}
 #mcard label{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--dim);margin-bottom:12px}
-#toast{
-  position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-70px);
-  background:var(--sheet);border:1px solid var(--chipbr);color:var(--keytx);
-  padding:10px 18px;border-radius:30px;font-size:13px;z-index:50;
-  transition:transform .3s;box-shadow:0 8px 30px var(--shadow);max-width:88vw;text-align:center;
-  pointer-events:none;
-}
+#toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-70px);background:var(--sheet);border:1px solid var(--chipbr);color:var(--keytx);padding:10px 18px;border-radius:30px;font-size:13px;z-index:50;transition:transform .3s;box-shadow:0 8px 30px var(--shadow);max-width:88vw;text-align:center;pointer-events:none}
 #toast.show{transform:translate(-50%,0)}
 #gwrap{position:relative}
 #gcanvas{width:100%;height:44vh;display:block;border-radius:14px;border:1px solid var(--keybr);background:var(--disp);touch-action:none}
@@ -241,7 +192,7 @@ body.nomotion *{animation:none!important;transition:none!important}
   .sci,.dig{flex:none}
   .sci{grid-auto-rows:minmax(42px,1fr);grid-template-rows:none}
   .dig{grid-auto-rows:minmax(46px,1fr);grid-template-rows:none}
-  .k{font-size:13px;border-radius:10px}
+  .k{font-size:13px;border-radius:10px;touch-action:pan-y}
   .dig .k{font-size:17px}
   .k .sl{font-size:7px;height:8px}
 }
@@ -283,7 +234,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.1.0";
+const APP_VERSION = "3.2.0";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -292,7 +243,7 @@ const D = {
 };
 const S = {
   root:[], cur:null, shift:false, hyp:false, fresh:false,
-  err:false, errMsg:"", ans:0, mem:0, hist:[]
+  err:false, errMsg:"", ans:0, mem:0, vx:0, vy:0, hist:[]
 };
 S.root.meta = null;
 S.cur = {arr:S.root, i:0};
@@ -305,12 +256,14 @@ try{
   const d = JSON.parse(localStorage.getItem("sciCalc3"));
   if(d){
     Object.assign(D, d.D||{});
-    S.ans = d.ans||0; S.mem = d.mem||0; S.hist = d.hist||[];
+    S.ans = d.ans||0; S.mem = d.mem||0;
+    S.vx = d.vx||0; S.vy = d.vy||0;
+    S.hist = d.hist||[];
   }
 }catch(e){}
 function save(){
   try{
-    localStorage.setItem("sciCalc3", JSON.stringify({D, ans:S.ans, mem:S.mem, hist:S.hist}));
+    localStorage.setItem("sciCalc3", JSON.stringify({D, ans:S.ans, mem:S.mem, vx:S.vx, vy:S.vy, hist:S.hist}));
   }catch(e){}
 }
 
@@ -328,7 +281,6 @@ function debounce(fn, ms){
 const E_EMPTY = "Κενό πεδίο";
 const E_DOM   = "Εκτός πεδίου ορισμού";
 const E_SYN   = "Μη έγκυρη πράξη";
-const E_VAR   = "Το X ορίζεται μόνο μέσα σε ∫, d/dx, Σ, Π";
 const E_DIV   = "Η σειρά αποκλίνει";
 
 /* ================= ΕΙΚΟΝΙΔΙΑ ================= */
@@ -800,8 +752,8 @@ function evNode(n, env){
       if(n.v === "∞") return Infinity;
       if(n.v === "Ans") return S.ans;
       if(n.v === "M") return S.mem;
-      if(n.v === "X"){ if(env.X === undefined) throw E_VAR; return env.X; }
-      if(n.v === "Y"){ if(env.Y === undefined) throw E_VAR; return env.Y; }
+      if(n.v === "X") return env.X !== undefined ? env.X : S.vx;
+      if(n.v === "Y") return env.Y !== undefined ? env.Y : S.vy;
       if(CV[n.v] !== undefined) return CV[n.v];
       throw E_SYN;
     case "frac": return E(n.f.n)/E(n.f.d);
@@ -903,18 +855,29 @@ function evNode(n, env){
   }
   throw E_SYN;
 }
-function simpson(f, a, b, n){
-  const fa = f(a), fb = f(b);
-  if(!isFinite(fa) || !isFinite(fb)){
-    let s = 0;
-    const h = (b-a)/n;
-    for(let i=0;i<n;i++) s += f(a+(i+.5)*h);
-    return s*h;
-  }
+function simpsonPlain(f, a, b, n){
   const h = (b-a)/n;
-  let s = fa+fb;
+  let s = f(a)+f(b);
   for(let i=1;i<n;i++) s += f(a+i*h)*(i%2?4:2);
   return s*h/3;
+}
+function simpsonSub(f, a, b, side){
+  const L = b-a;
+  const g = side==="lo"
+    ? t=>f(a + L*t*t)*2*L*t
+    : t=>f(b - L*t*t)*2*L*t;
+  return simpsonPlain(g, 0, 1, 2000);
+}
+function simpson(f, a, b, n){
+  const fa = f(a), fb = f(b);
+  const ba = !isFinite(fa), bb = !isFinite(fb);
+  if(ba && bb){
+    const m = (a+b)/2;
+    return simpsonSub(f, a, m, "lo") + simpsonSub(f, m, b, "hi");
+  }
+  if(ba) return simpsonSub(f, a, b, "lo");
+  if(bb) return simpsonSub(f, a, b, "hi");
+  return simpsonPlain(f, a, b, n);
 }
 function integ(lo, hi, f){
   if(lo === hi) return 0;
@@ -1052,6 +1015,12 @@ function radSign(){
   return s;
 }
 function caretEl(){ return el("span","caret"); }
+function slotEl(arr, cls){
+  const s = el("span", cls||"slot");
+  s._slot = arr;
+  s.appendChild(renderArr(arr));
+  return s;
+}
 function renderArr(arr){
   const f = document.createDocumentFragment();
   const here = S.cur.arr === arr;
@@ -1060,7 +1029,11 @@ function renderArr(arr){
     f.appendChild(renderNode(arr[i]));
   }
   if(here && S.cur.i === arr.length) f.appendChild(caretEl());
-  if(arr.length === 0 && !here) f.appendChild(el("span","empty"));
+  if(arr.length === 0 && !here){
+    const em = el("span","empty");
+    em._slot = arr;
+    f.appendChild(em);
+  }
   return f;
 }
 function renderNode(n){
@@ -1084,70 +1057,84 @@ function renderNode(n){
       break;
     case "frac":{
       e = el("span","fr");
-      const a = el("span","fn_"); a.appendChild(renderArr(n.f.n));
-      const b = el("span","fd"); b.appendChild(renderArr(n.f.d));
+      const a = slotEl(n.f.n,"fn_");
+      const b = slotEl(n.f.d,"fd");
       e.append(a,b);
+      e._f = {n:a, d:b};
       break;
     }
     case "mixed":{
       e = el("span","mx");
-      const w = el("span","slot"); w.appendChild(renderArr(n.f.w));
-      const fr = mk("frac"); fr.f.n = n.f.n; fr.f.d = n.f.d;
-      e.append(w, renderNode(fr));
+      const w = slotEl(n.f.w);
+      const tf = mk("frac"); tf.f.n = n.f.n; tf.f.d = n.f.d;
+      const fr = renderNode(tf);
+      e.append(w, fr);
+      e._f = {w, n:fr._f.n, d:fr._f.d};
       break;
     }
     case "pow":{
       e = el("span","pw");
-      const b = el("span","slot"); b.appendChild(renderArr(n.f.b));
-      const x = el("span","pe"); x.appendChild(renderArr(n.f.e));
+      const b = slotEl(n.f.b);
+      const x = slotEl(n.f.e,"pe");
       e.append(b,x);
+      e._f = {b, e:x};
       break;
     }
     case "sqrt":{
       e = el("span","rd");
       e.append(radSign());
-      const b = el("span","rb"); b.appendChild(renderArr(n.f.r));
+      const b = slotEl(n.f.r,"rb");
       e.append(b);
+      e._f = {r:b};
       break;
     }
     case "root":{
       e = el("span","rd");
-      const i = el("span","ri"); i.appendChild(renderArr(n.f.i));
+      const i = slotEl(n.f.i,"ri");
       e.append(i, radSign());
-      const b = el("span","rb"); b.appendChild(renderArr(n.f.r));
+      const b = slotEl(n.f.r,"rb");
       e.append(b);
+      e._f = {i, r:b};
       break;
     }
     case "paren":{
       e = el("span","pa");
-      const b = el("span","pb"); b.appendChild(renderArr(n.f.b));
+      const b = slotEl(n.f.b,"pb");
       e.append(el("span","pl"), b, el("span","pr"));
+      e._f = {b};
       break;
     }
     case "abs":{
       e = el("span","ab");
-      const b = el("span","pb"); b.appendChild(renderArr(n.f.b));
+      const b = slotEl(n.f.b,"pb");
       e.append(el("span","bar"), b, el("span","bar"));
+      e._f = {b};
       break;
     }
     case "fn":{
       e = el("span","n");
       if(n.v === "logxy"){
         e.append(txt("log"));
-        const sb = el("span","sub"); sb.appendChild(renderArr(n.f.a));
+        const sb = slotEl(n.f.a,"sub");
         e.append(sb);
-        const pa = mk("paren"); pa.f.b = n.f.b;
-        e.append(renderNode(pa));
+        const tp = mk("paren"); tp.f.b = n.f.b;
+        const pa = renderNode(tp);
+        e.append(pa);
+        e._f = {a:sb, b:pa._f.b};
       } else {
         const nm = el("span","fnn");
         nm.textContent = FNDISP[n.v]||n.v;
         e.append(nm);
-        const pa = mk("paren"); pa.f.b = n.f.a;
-        e.append(renderNode(pa));
+        const tp = mk("paren"); tp.f.b = n.f.a;
+        const pa = renderNode(tp);
+        e.append(pa);
+        e._f = {a:pa._f.b};
         if(n.f.b){
           e.append(txt(","));
-          const pb = mk("paren"); pb.f.b = n.f.b;
-          e.append(renderNode(pb));
+          const tp2 = mk("paren"); tp2.f.b = n.f.b;
+          const pb = renderNode(tp2);
+          e.append(pb);
+          e._f.b = pb._f.b;
         }
       }
       break;
@@ -1156,12 +1143,13 @@ function renderNode(n){
       e = el("span","big");
       const sy = el("span","sym"); sy.textContent = "∫";
       const li = el("span","lims");
-      const hi = el("span"); hi.appendChild(renderArr(n.f.hi));
-      const lo = el("span"); lo.appendChild(renderArr(n.f.lo));
+      const hi = slotEl(n.f.hi);
+      const lo = slotEl(n.f.lo);
       li.append(hi,lo);
-      const b = el("span","slot"); b.appendChild(renderArr(n.f.b));
+      const b = slotEl(n.f.b);
       const dx = el("span","dX"); dx.textContent = "dX";
       e.append(sy,li,b,dx);
+      e._f = {hi, lo, b};
       break;
     }
     case "der":{
@@ -1170,33 +1158,41 @@ function renderNode(n){
       const s1 = el("span"); s1.textContent = "d";
       const s2 = el("span"); s2.textContent = "dX";
       df.append(s1,s2);
-      const pa = mk("paren"); pa.f.b = n.f.b;
+      const tp = mk("paren"); tp.f.b = n.f.b;
+      const pa = renderNode(tp);
       const ev = el("span","ev");
-      const sb = el("span","sub"); sb.appendChild(renderArr(n.f.p));
-      e.append(df, renderNode(pa), ev, sb);
+      const sb = slotEl(n.f.p,"sub");
+      e.append(df, pa, ev, sb);
+      e._f = {b:pa._f.b, p:sb};
       break;
     }
     case "sum":{
       e = el("span","big");
       const sy = el("span","sym"); sy.textContent = n.v;
       const li = el("span","lims");
-      const hi = el("span"); hi.appendChild(renderArr(n.f.hi));
-      const lo = el("span"); lo.append(txt("X=")); lo.appendChild(renderArr(n.f.lo));
-      li.append(hi,lo);
-      const b = el("span","slot"); b.appendChild(renderArr(n.f.b));
+      const hi = slotEl(n.f.hi);
+      const lo = slotEl(n.f.lo);
+      const loWrap = el("span");
+      loWrap.append(txt("X="));
+      loWrap.append(lo);
+      li.append(hi,loWrap);
+      const b = slotEl(n.f.b);
       e.append(sy,li,b);
+      e._f = {hi, lo, b};
       break;
     }
     case "dms":{
       e = el("span","n");
-      const d = el("span","slot"); d.appendChild(renderArr(n.f.d));
-      const m = el("span","slot"); m.appendChild(renderArr(n.f.m));
-      const s = el("span","slot"); s.appendChild(renderArr(n.f.s));
+      const d = slotEl(n.f.d);
+      const m = slotEl(n.f.m);
+      const s = slotEl(n.f.s);
       e.append(d, txt("°"), m, txt("′"), s, txt("″"));
+      e._f = {d, m, s};
       break;
     }
     default: e = el("span");
   }
+  e._node = n;
   return e;
 }
 function scrollCaret(){
@@ -1273,6 +1269,7 @@ function render(){
   const sb = document.getElementById("shiftBtn");
   if(sb) sb.classList.toggle("on", S.shift);
   exprIn.innerHTML = "";
+  exprIn._slot = S.root;
   exprIn.appendChild(renderArr(S.root));
   scrollCaret();
   if(S.err){
@@ -1284,6 +1281,85 @@ function render(){
   document.getElementById("sndbtn").innerHTML = D.sound?IC.sndOn:IC.sndOff;
   saveExpr();
 }
+
+/* ================= TAP -> ΘΕΣΗ ΔΡΟΜΕΑ ================= */
+function indexInSlot(wrapper, x){
+  let i = 0;
+  for(const c of wrapper.children){
+    if(!c._node) continue;
+    const r = c.getBoundingClientRect();
+    if(x > r.left + r.width/2) i++;
+    else break;
+  }
+  return i;
+}
+function placeFromTap(x, y){
+  let t = document.elementFromPoint(x, y);
+  let slotWrap = null, nodeEl = null;
+  while(t && t !== exprIn){
+    if(!slotWrap && t._slot) slotWrap = t;
+    if(!nodeEl && t._node) nodeEl = t;
+    t = t.parentElement;
+  }
+  if(slotWrap){
+    S.cur = {arr:slotWrap._slot, i:indexInSlot(slotWrap, x)};
+  } else if(nodeEl){
+    const n = nodeEl._node;
+    const fs = fieldsOf(n);
+    if(fs && nodeEl._f){
+      let best = null, bd = Infinity;
+      for(const f of fs){
+        const w = nodeEl._f[f];
+        if(!w) continue;
+        const r = w.getBoundingClientRect();
+        const cx = r.left+r.width/2, cy = r.top+r.height/2;
+        const d = (cx-x)*(cx-x)+(cy-y)*(cy-y);
+        if(d < bd){ bd = d; best = w; }
+      }
+      if(best){
+        S.cur = {arr:best._slot, i:indexInSlot(best, x)};
+      } else {
+        S.cur = {arr:n.f[fs[0]], i:0};
+      }
+    } else {
+      const par = nodeEl.parentElement;
+      const arr = par && par._slot;
+      if(arr){
+        const idx = arr.indexOf(n);
+        const r = nodeEl.getBoundingClientRect();
+        S.cur = {arr, i:idx + (x < r.left+r.width/2 ? 0 : 1)};
+      } else {
+        S.cur = {arr:S.root, i:S.root.length};
+      }
+    }
+  } else {
+    S.cur = {arr:S.root, i:S.root.length};
+  }
+  S.fresh = false;
+  S.err = false;
+  vib(4);
+  render();
+}
+let tapStart = null;
+exprIn.addEventListener("pointerdown", e=>{
+  tapStart = {x:e.clientX, y:e.clientY, t:Date.now()};
+});
+exprIn.addEventListener("pointerup", e=>{
+  if(!tapStart) return;
+  const dx = Math.abs(e.clientX-tapStart.x);
+  const dy = Math.abs(e.clientY-tapStart.y);
+  const dt = Date.now()-tapStart.t;
+  tapStart = null;
+  if(dx < 8 && dy < 8 && dt < 600) placeFromTap(e.clientX, e.clientY);
+});
+exprIn.addEventListener("pointercancel", ()=>tapStart = null);
+exprBox.addEventListener("click", e=>{
+  if(e.target === exprBox || e.target.id === "expr"){
+    S.cur = {arr:S.root, i:S.root.length};
+    S.fresh = false;
+    render();
+  }
+});
 
 /* ================= ΠΛΗΚΤΡΑ ================= */
 function trigName(base, sh, hyp){
@@ -1559,14 +1635,6 @@ resEl.addEventListener("pointerup", ()=>clearTimeout(resHold));
 resEl.addEventListener("pointercancel", ()=>clearTimeout(resHold));
 resEl.addEventListener("pointerleave", ()=>clearTimeout(resHold));
 
-exprBox.addEventListener("click", e=>{
-  if(e.target === exprBox || e.target.id === "expr" || e.target === exprIn){
-    S.cur = {arr:S.root, i:S.root.length};
-    S.fresh = false;
-    render();
-  }
-});
-
 /* ================= ΦΥΛΛΑ ================= */
 const sheet = document.getElementById("sheet");
 const pbody = document.getElementById("pbody");
@@ -1617,6 +1685,17 @@ function toggle(on, fn){
   });
   return b;
 }
+function varInput(get, set){
+  const i = document.createElement("input");
+  i.type = "text";
+  i.inputMode = "decimal";
+  i.value = String(get());
+  i.addEventListener("input", ()=>{
+    const v = parseFloat(i.value.replace(",","."));
+    if(!Number.isNaN(v)){ set(v); save(); render(); }
+  });
+  return i;
+}
 const CNAMES = {
   c:"Ταχύτητα φωτός", h:"Σταθερά Planck", "ħ":"ħ = h/2π", G:"Σταθερά βαρύτητας",
   "qₑ":"Φορτίο ηλεκτρονίου", "ε₀":"Ηλεκτρική σταθερά", "μ₀":"Μαγνητική σταθερά",
@@ -1625,7 +1704,7 @@ const CNAMES = {
   "σ":"Σταθερά Stefan–Boltzmann", g:"Επιτάχυνση βαρύτητας", atm:"Ατμοσφαιρική πίεση",
   u:"Ατομική μονάδα μάζας", "kₑ":"Σταθερά Coulomb", "α":"Σταθερά λεπτής υφής",
   "Φ₀":"Κβάντο μαγνητικής ροής", "R_K":"Σταθερά von Klitzing", "K_J":"Σταθερά Josephson",
-  "μ_B":"Μαγνητική ροπή Bohr", "μ_N":"Πυρηνική μαγνήτων", "rₑ":"Κλασική ακτίνα ηλεκτρονίου",
+  "μ_B":"Μαγνήτρον Bohr", "μ_N":"Πυρηνικό μαγνήτρον", "rₑ":"Κλασική ακτίνα ηλεκτρονίου",
   "a₀":"Ακτίνα Bohr", "E_h":"Ενέργεια Hartree", "R∞":"Σταθερά Rydberg",
   "F":"Σταθερά Faraday", "V_m":"Γραμμομοριακός όγκος", "k":"Σταθερά Boltzmann"
 };
@@ -1677,13 +1756,29 @@ function buildMenu(){
   const pw = el("span");
   pw.style.cssText = "display:flex;gap:8px;flex:1;align-items:center";
   pw.append(prec, pout);
+  const storeX = el("button","bigbtn");
+  storeX.type = "button";
+  storeX.textContent = "Αποθήκευση τρέχουσας τιμής στο X";
+  storeX.addEventListener("click", ()=>{
+    const v = computeLive();
+    if(v!==null && isFinite(v)){ S.vx = v; save(); render(); toast("X = "+autoStr(v,D.prec)); }
+    else toast("Καμία έγκυρη τιμή");
+  });
+  const storeY = el("button","bigbtn");
+  storeY.type = "button";
+  storeY.textContent = "Αποθήκευση τρέχουσας τιμής στο Y";
+  storeY.addEventListener("click", ()=>{
+    const v = computeLive();
+    if(v!==null && isFinite(v)){ S.vy = v; save(); render(); toast("Y = "+autoStr(v,D.prec)); }
+    else toast("Καμία έγκυρη τιμή");
+  });
   const ub = el("button","bigbtn");
   ub.type = "button";
   ub.textContent = "Έλεγχος ενημέρωσης";
   ub.addEventListener("click", ()=>{ sheet.hidden = true; askUpdate(); });
   const rb = el("button","bigbtn warn");
   rb.type = "button";
-  rb.textContent = "Επαναφορά όλων";
+  rb.textContent = "Επαναφορά ρυθμίσεων";
   rb.addEventListener("click", ()=>{
     Object.assign(D,{theme:"Διάστημα",angle:"DEG",fmt:"AUTO",sd:0,base:"DEC",dms:false,prec:10,group:true,sound:true,vib:true,motion:true});
     save(); applyTheme(); render(); openSheet("menu");
@@ -1697,10 +1792,12 @@ function buildMenu(){
     row("Ομαδοποίηση χιλιάδων", toggle(D.group, v=>D.group=v)),
     row("Βάση", select(["DEC","BIN","OCT","HEX"], D.base, v=>D.base=v)),
     row("Κλάσμα (S⇔D)", select(["Όχι","Κλάσμα","Μικτό"], D.sd===0?"Όχι":D.sd===1?"Κλάσμα":"Μικτό", v=>D.sd=v==="Όχι"?0:v==="Κλάσμα"?1:2)),
+    row("Μεταβλητή X", varInput(()=>S.vx, v=>S.vx=v)),
+    row("Μεταβλητή Y", varInput(()=>S.vy, v=>S.vy=v)),
     row("Ήχος", toggle(D.sound, v=>D.sound=v)),
     row("Δόνηση", toggle(D.vib, v=>D.vib=v)),
     row("Κίνηση / εφέ", toggle(D.motion, v=>D.motion=v)),
-    ub, rb
+    storeX, storeY, ub, rb
   );
 }
 function buildCnst(){
@@ -2146,7 +2243,7 @@ document.addEventListener("keydown", e=>{
   e.preventDefault();
 });
 
-/* ================= VISUAL VIEWPORT (ΠΛΗΚΤΡΟΛΟΓΙΟ ΟΘΟΝΗΣ) ================= */
+/* ================= VISUAL VIEWPORT ================= */
 function fitVV(){
   const vv = window.visualViewport;
   if(!vv) return;

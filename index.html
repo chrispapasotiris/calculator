@@ -48,26 +48,28 @@ body[data-theme="Πορσελάνη"]{
 }
 /* ============ ΒΑΣΗ ============ */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{height:100%;overscroll-behavior:none}
 body{
-  margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  margin:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
   font-family:system-ui,-apple-system,sans-serif;color:var(--keytx);
   background:
     radial-gradient(60% 45% at 15% 0%,var(--glow1),transparent 70%),
     radial-gradient(55% 40% at 90% 100%,var(--glow2),transparent 70%),
     linear-gradient(180deg,var(--bg1),var(--bg2));
-  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;
   transition:background .5s,color .3s;
   padding-top:env(safe-area-inset-top);
 }
+input,textarea{user-select:text;-webkit-user-select:text}
 [hidden]{display:none!important}
 button{font-family:inherit;color:inherit}
 /* ============ ΠΑΝΩ ΜΠΑΡΑ ============ */
 #bar{display:flex;align-items:center;gap:4px;padding:6px 10px 0}
 .ibtn{
-  width:30px;height:30px;flex:none;border:none;border-radius:10px;
+  width:32px;height:32px;flex:none;border:none;border-radius:10px;
   background:transparent;color:var(--dim);display:flex;align-items:center;justify-content:center;
-  transition:background .2s,color .2s,transform .1s;
+  transition:background .2s,color .2s,transform .1s;touch-action:none;
 }
 .ibtn:active{transform:scale(.9);background:var(--chip);color:var(--accent2)}
 .ibtn[disabled]{opacity:.3}
@@ -76,7 +78,7 @@ button{font-family:inherit;color:inherit}
 #chips{flex:1;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px}
 #chips::-webkit-scrollbar{display:none}
 .chip{
-  flex:none;font-size:10px;letter-spacing:.8px;padding:3px 8px;border-radius:20px;
+  flex:none;font-size:10px;letter-spacing:.8px;padding:4px 9px;border-radius:20px;
   background:var(--chip);border:1px solid var(--chipbr);color:var(--accent2);
 }
 .chip.click{cursor:pointer}
@@ -89,7 +91,7 @@ button{font-family:inherit;color:inherit}
   box-shadow:0 10px 34px var(--shadow);
   padding:8px 12px;transition:background .4s,border-color .4s;
 }
-#exprbox{flex:1;overflow:auto;padding:6px 2px;scrollbar-width:thin;scrollbar-color:var(--bar) transparent}
+#exprbox{flex:1;overflow:auto;padding:6px 2px;scrollbar-width:thin;scrollbar-color:var(--bar) transparent;touch-action:pan-x pan-y}
 #exprbox::-webkit-scrollbar{width:7px;height:7px}
 #exprbox::-webkit-scrollbar-track{background:transparent}
 #exprbox::-webkit-scrollbar-thumb{background:var(--bar);border-radius:4px}
@@ -98,11 +100,10 @@ button{font-family:inherit;color:inherit}
 #res{
   font-size:38px;font-weight:600;color:var(--restx);min-height:46px;line-height:46px;
   display:flex;justify-content:flex-end;align-items:center;gap:6px;
-  overflow-x:auto;white-space:nowrap;scrollbar-width:none;letter-spacing:.5px;
+  overflow-x:auto;white-space:nowrap;scrollbar-width:none;letter-spacing:.5px;touch-action:pan-x;
 }
 #res::-webkit-scrollbar{display:none}
 #res.err{color:var(--danger);font-size:20px;font-weight:500}
-#res .hint{font-size:11px;color:var(--dim);font-weight:400}
 /* ============ ΜΑΘΗΜΑΤΙΚΗ ΑΠΟΔΟΣΗ ============ */
 .slot{display:inline-flex;align-items:center}
 .empty{min-width:.7em;min-height:1.15em;border:1px dashed var(--dim);border-radius:4px;margin:0 2px;opacity:.6}
@@ -150,9 +151,11 @@ button{font-family:inherit;color:inherit}
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:0;
   box-shadow:0 2px 0 var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);
   transition:background .25s,border-color .25s,transform .08s,box-shadow .08s;
+  touch-action:none;
 }
 .k:active{transform:translateY(1px) scale(.97);box-shadow:0 0 0 var(--shadow)}
-.k .sl{font-size:9px;line-height:9px;height:10px;color:var(--accent2);opacity:.85}
+.k .sl{font-size:9px;line-height:9px;height:10px;color:var(--accent2);opacity:.85;transition:color .15s}
+.k.holding .sl{color:var(--restx);font-weight:700;opacity:1}
 .dig .k{font-size:22px}
 .k.fnk{font-size:12.5px;letter-spacing:.3px}
 .k.red{color:var(--danger)}
@@ -162,38 +165,40 @@ button{font-family:inherit;color:inherit}
   box-shadow:0 3px 14px var(--glow1),0 2px 0 var(--shadow);
 }
 body[data-theme="Πορσελάνη"] .k.eq{color:#fff}
-.k.eq .hold{position:absolute;left:0;bottom:0;height:3px;width:0;background:rgba(255,255,255,.85)}
-.k.eq.holding .hold{width:100%;transition:width .5s linear}
+.holdbar{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--accent2);opacity:.9;pointer-events:none}
+.k.eq .holdbar{background:rgba(255,255,255,.85)}
+.k.holding .holdbar{width:100%;transition:width .4s linear}
+.k.eq.holding .holdbar{transition:width .5s linear}
 #shiftBtn.on{background:var(--chip);border-color:var(--accent2);color:var(--accent2)}
 .ripple{position:absolute;border-radius:50%;background:var(--accent2);opacity:.25;transform:scale(0);animation:rip .5s ease-out forwards;pointer-events:none}
 @keyframes rip{to{transform:scale(3);opacity:0}}
 body.nomotion .ripple{display:none}
 body.nomotion *{animation:none!important;transition:none!important}
 /* ============ ΦΥΛΛΑ / MODAL / TOAST ============ */
-#sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:30}
+#sheet{position:fixed;left:0;right:0;top:0;height:var(--vvh,100%);background:rgba(0,0,0,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:30}
 #panel{
   background:var(--sheet);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border-top:1px solid var(--dispbr);border-radius:24px 24px 0 0;
-  max-height:84vh;display:flex;flex-direction:column;box-shadow:0 -12px 40px var(--shadow);
+  max-height:calc(var(--vvh,84vh) - 10px);display:flex;flex-direction:column;box-shadow:0 -12px 40px var(--shadow);
 }
 #tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 4px;scrollbar-width:none}
 #tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;font-size:12.5px;padding:7px 13px;border-radius:20px;border:1px solid var(--keybr);background:transparent;color:var(--dim)}
+.tab{flex:none;font-size:12.5px;padding:8px 14px;border-radius:20px;border:1px solid var(--keybr);background:transparent;color:var(--dim)}
 .tab.on{background:var(--chip);border-color:var(--chipbr);color:var(--accent2)}
-#phead{display:flex;justify-content:space-between;align-items:center;padding:6px 16px;color:var(--dim);font-size:12px}
-#pbody{overflow-y:auto;padding:0 16px calc(20px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--bar) transparent}
+#phead{display:flex;justify-content:space-between;align-items:center;padding:6px 16px;color:var(--dim);font-size:12px;touch-action:none}
+#pbody{overflow-y:auto;padding:0 16px calc(20px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--bar) transparent;overscroll-behavior:contain}
 #pbody::-webkit-scrollbar{width:7px}
 #pbody::-webkit-scrollbar-thumb{background:var(--bar);border-radius:4px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--keybr);font-size:14px}
 .row select,.row input[type=number],.row input[type=text]{
-  background:var(--key);color:var(--keytx);border:1px solid var(--keybr);border-radius:9px;padding:7px;font-size:14px;max-width:58%;
+  background:var(--key);color:var(--keytx);border:1px solid var(--keybr);border-radius:9px;padding:8px;font-size:16px;max-width:58%;
 }
 .row input[type=range]{flex:1;accent-color:var(--accent1)}
-.tgl{width:46px;height:25px;border-radius:13px;background:var(--key);border:1px solid var(--keybr);position:relative;flex:none;padding:0;transition:background .2s}
-.tgl::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--dim);transition:left .18s,background .18s}
+.tgl{width:46px;height:26px;border-radius:13px;background:var(--key);border:1px solid var(--keybr);position:relative;flex:none;padding:0;transition:background .2s;touch-action:none}
+.tgl::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--dim);transition:left .18s,background .18s}
 .tgl.on{background:var(--chip)}
-.tgl.on::after{left:23px;background:var(--accent2)}
-.crow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 2px;border-bottom:1px solid var(--keybr);font-size:14px}
+.tgl.on::after{left:22px;background:var(--accent2)}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 2px;border-bottom:1px solid var(--keybr);font-size:14px}
 .crow .cs{color:var(--restx);font-size:17px;min-width:46px}
 .crow .cn{flex:1;color:var(--keytx)}
 .crow .cv{color:var(--dim);font-size:11px}
@@ -201,18 +206,18 @@ body.nomotion *{animation:none!important;transition:none!important}
 .hrow .ht{flex:1;min-width:0}
 .hrow .he{color:var(--dim);font-size:11.5px;word-break:break-all}
 .hrow .hr{color:var(--restx);font-size:16px;font-weight:600}
-.hrow button{font-size:11.5px;padding:6px 9px;background:var(--key);border:1px solid var(--keybr);border-radius:8px;flex:none}
-.bigbtn{width:100%;padding:12px;border-radius:12px;border:1px solid var(--chipbr);background:var(--chip);color:var(--accent2);font-size:14.5px;margin-top:10px}
+.hrow button{font-size:11.5px;padding:8px 10px;background:var(--key);border:1px solid var(--keybr);border-radius:8px;flex:none}
+.bigbtn{width:100%;padding:13px;border-radius:12px;border:1px solid var(--chipbr);background:var(--chip);color:var(--accent2);font-size:14.5px;margin-top:10px}
 .bigbtn.warn{background:rgba(255,95,122,.12);border-color:var(--danger);color:var(--danger)}
 .bigbtn.go{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#04101c;border:none;font-weight:700}
 .convout{color:var(--restx);font-size:21px;text-align:right;padding:12px 2px;font-weight:600}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:40;padding:22px}
-#mcard{background:var(--sheet);backdrop-filter:blur(18px);border:1px solid var(--dispbr);border-radius:22px;max-width:400px;width:100%;padding:20px;box-shadow:0 18px 60px var(--shadow)}
+#modal{position:fixed;left:0;right:0;top:0;height:var(--vvh,100%);background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:40;padding:22px}
+#mcard{background:var(--sheet);backdrop-filter:blur(18px);border:1px solid var(--dispbr);border-radius:22px;max-width:400px;width:100%;padding:20px;box-shadow:0 18px 60px var(--shadow);max-height:calc(var(--vvh,84vh) - 30px);overflow-y:auto}
 #mcard h3{margin:0 0 8px;font-size:17px;color:var(--accent2)}
 #mcard p{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--keytx)}
 #mcard ul{margin:0 0 12px;padding-left:18px;font-size:13px;color:var(--dim);line-height:1.6}
 #mcard .mrow{display:flex;gap:9px;margin-top:6px}
-#mcard .mrow button{flex:1;padding:11px;border-radius:12px;font-size:14px;border:1px solid var(--keybr);background:var(--key)}
+#mcard .mrow button{flex:1;padding:13px;border-radius:12px;font-size:14px;border:1px solid var(--keybr);background:var(--key)}
 #mcard .mrow button.go{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#04101c;border:none;font-weight:700}
 #mcard label{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--dim);margin-bottom:12px}
 #toast{
@@ -220,19 +225,24 @@ body.nomotion *{animation:none!important;transition:none!important}
   background:var(--sheet);border:1px solid var(--chipbr);color:var(--keytx);
   padding:10px 18px;border-radius:30px;font-size:13px;z-index:50;
   transition:transform .3s;box-shadow:0 8px 30px var(--shadow);max-width:88vw;text-align:center;
+  pointer-events:none;
 }
 #toast.show{transform:translate(-50%,0)}
 #gwrap{position:relative}
 #gcanvas{width:100%;height:44vh;display:block;border-radius:14px;border:1px solid var(--keybr);background:var(--disp);touch-action:none}
 #gtools{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
-#gtools button{padding:8px 13px;border-radius:10px;border:1px solid var(--keybr);background:var(--key);font-size:13px}
+#gtools button{padding:10px 14px;border-radius:10px;border:1px solid var(--keybr);background:var(--key);font-size:13px}
 #gread{margin-top:8px;font-size:13px;color:var(--restx);min-height:18px}
 @media (orientation:landscape) and (max-height:520px){
-  #display{height:32vh;min-height:110px}
+  #display{height:30vh;min-height:104px}
   #res{font-size:26px;min-height:32px;line-height:32px}
   #exprin{font-size:18px}
-  .k{font-size:12px;border-radius:10px}
-  .dig .k{font-size:16px}
+  #keys{overflow-y:auto;overscroll-behavior:contain}
+  .sci,.dig{flex:none}
+  .sci{grid-auto-rows:minmax(42px,1fr);grid-template-rows:none}
+  .dig{grid-auto-rows:minmax(46px,1fr);grid-template-rows:none}
+  .k{font-size:13px;border-radius:10px}
+  .dig .k{font-size:17px}
   .k .sl{font-size:7px;height:8px}
 }
 @media (max-height:680px) and (orientation:portrait){
@@ -273,7 +283,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.0.0";
+const APP_VERSION = "3.1.0";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -289,6 +299,8 @@ S.cur = {arr:S.root, i:0};
 let lastErr = "";
 const undoStack = [], redoStack = [];
 
+function ssGet(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+function ssSet(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }
 try{
   const d = JSON.parse(localStorage.getItem("sciCalc3"));
   if(d){
@@ -317,6 +329,7 @@ const E_EMPTY = "Κενό πεδίο";
 const E_DOM   = "Εκτός πεδίου ορισμού";
 const E_SYN   = "Μη έγκυρη πράξη";
 const E_VAR   = "Το X ορίζεται μόνο μέσα σε ∫, d/dx, Σ, Π";
+const E_DIV   = "Η σειρά αποκλίνει";
 
 /* ================= ΕΙΚΟΝΙΔΙΑ ================= */
 const IC = {
@@ -676,11 +689,18 @@ function delNode(){
   render();
 }
 function closeParen(){
-  const m = S.cur.arr.meta;
-  if(m && (m.node.t === "paren" || m.node.t === "abs")){
-    S.cur = {arr:m.parent, i:m.parent.indexOf(m.node)+1};
-    render();
-  } else right(), render();
+  let a = S.cur.arr;
+  while(a.meta){
+    const nd = a.meta.node;
+    if(nd.t === "paren" || nd.t === "abs"){
+      S.cur = {arr:a.meta.parent, i:a.meta.parent.indexOf(nd)+1};
+      render();
+      return;
+    }
+    a = a.meta.parent;
+  }
+  right();
+  render();
 }
 
 /* ================= ΥΠΟΛΟΓΙΣΜΟΣ ================= */
@@ -770,7 +790,7 @@ function evNode(n, env){
   const E = a=>evArr(a, env);
   switch(n.t){
     case "num":{
-      const v = parseFloat(n.v);
+      const v = parseFloat(String(n.v).replace(/−/g,"-"));
       if(Number.isNaN(v)) throw E_SYN;
       return n.neg ? -v : v;
     }
@@ -857,15 +877,24 @@ function evNode(n, env){
       const prod = n.v === "Π";
       let acc = prod?1:0;
       if(en === Infinity){
-        for(let k=st;k<st+200000;k++){
+        for(let k=st;k<st+50000;k++){
           const t = evArr(n.f.b, Object.assign({},env,{X:k}));
           if(!isFinite(t)) throw E_DOM;
-          if(prod){ acc *= t; if(Math.abs(t-1) < 1e-13) break; }
-          else { acc += t; if(Math.abs(t) < 1e-13) break; }
+          if(Math.abs(t) > 1e12) throw E_DIV;
+          if(prod){
+            if(Math.abs(t) < 1e-12) throw E_DIV;
+            acc *= t;
+            if(Math.abs(t-1) < 1e-13) break;
+          } else {
+            acc += t;
+            if(Math.abs(t) < 1e-13) break;
+          }
         }
         return acc;
       }
-      for(let k=st;k<=Math.round(en);k++){
+      const end = Math.round(en);
+      if(end - st > 200000) throw E_DIV;
+      for(let k=st;k<=end;k++){
         const t = evArr(n.f.b, Object.assign({},env,{X:k}));
         acc = prod ? acc*t : acc+t;
       }
@@ -902,7 +931,7 @@ function integ(lo, hi, f){
   }
   return simpson(f, lo, hi, 1000);
 }
-function live(){
+function computeLive(){
   try{
     const v = evArr(S.root, {});
     if(typeof v !== "number" || Number.isNaN(v)){ lastErr = E_DOM; return null; }
@@ -912,6 +941,13 @@ function live(){
     return null;
   }
 }
+let liveKey = null, liveVal = null;
+function liveCached(key){
+  if(key === liveKey) return liveVal;
+  liveKey = key;
+  liveVal = computeLive();
+  return liveVal;
+}
 
 /* ================= ΜΟΡΦΟΠΟΙΗΣΗ ================= */
 function strip(s){
@@ -920,7 +956,9 @@ function strip(s){
 function group(s){
   if(!D.group) return s;
   const parts = s.split("E");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g," ");
+  const dec = parts[0].split(".");
+  dec[0] = dec[0].replace(/\B(?=(\d{3})+(?!\d))/g," ");
+  parts[0] = dec.join(".");
   return parts.join("E");
 }
 function sciStr(v,p){
@@ -1030,7 +1068,7 @@ function renderNode(n){
   switch(n.t){
     case "num":
       e = el("span","n");
-      e.textContent = (n.neg?"−":"")+n.v;
+      e.textContent = (n.neg?"−":"")+String(n.v).replace(/-/g,"−");
       break;
     case "const":
       e = el("span","n");
@@ -1212,6 +1250,7 @@ function resultContent(v){
   resEl.textContent = s;
 }
 function chips(){
+  const keep = chipsEl.scrollLeft;
   chipsEl.innerHTML = "";
   const add = (label, click)=>{
     const c = el("span","chip"+(click?" click":""));
@@ -1227,6 +1266,7 @@ function chips(){
   if(S.hyp) add("HYP");
   if(S.shift) add("SHIFT");
   if(S.mem !== 0) add("M", ()=>toast("Μνήμη: "+autoStr(S.mem,D.prec)));
+  chipsEl.scrollLeft = keep;
 }
 function render(){
   chips();
@@ -1240,7 +1280,7 @@ function render(){
     resEl.textContent = S.errMsg||"Σφάλμα";
     resEl.classList.add("err");
     resEl.dataset.v = "";
-  } else resultContent(live());
+  } else resultContent(liveCached(serialize()));
   document.getElementById("sndbtn").innerHTML = D.sound?IC.sndOn:IC.sndOff;
   saveExpr();
 }
@@ -1249,10 +1289,10 @@ function render(){
 function trigName(base, sh, hyp){
   return (sh?"a":"")+base+(hyp?"h":"");
 }
-function doKey(k, ev){
+function execKey(k, force){
   S.err = false;
   if(k.a === "shift"){ S.shift = !S.shift; render(); return; }
-  const sh = S.shift;
+  const sh = force || S.shift;
   S.shift = false;
   vib(); clickSnd();
   if(k.t === "trig"){
@@ -1285,7 +1325,7 @@ function applyIns(v){
   if(v === "pow") return powKey();
   if(v === "pow2") return powKey("2");
   if(v === "pow3") return powKey("3");
-  if(v === "inv") return powKey("−1");
+  if(v === "inv") return powKey("-1");
   if(v === "e^") return powBase(konst("e"));
   if(v === "10^") return powBase(num(10));
   if(v === "exp10"){ op("×"); return powBase(num(10)); }
@@ -1323,18 +1363,20 @@ function act(a){
     case "hex": D.base=D.base==="HEX"?"DEC":"HEX"; save(); render(); break;
     case "dec": D.base="DEC"; save(); render(); break;
     case "dmsout": D.dms=!D.dms; save(); render(); break;
-    case "mplus": v=live(); if(v!==null&&isFinite(v)){S.mem+=v;save();toast("M = "+autoStr(S.mem,D.prec));} render(); break;
-    case "mminus": v=live(); if(v!==null&&isFinite(v)){S.mem-=v;save();toast("M = "+autoStr(S.mem,D.prec));} render(); break;
-    case "mstore": v=live(); if(v!==null&&isFinite(v)){S.mem=v;save();toast("Αποθηκεύτηκε στη μνήμη");} render(); break;
+    case "mplus": v=computeLive(); if(v!==null&&isFinite(v)){S.mem+=v;save();toast("M = "+autoStr(S.mem,D.prec));} render(); break;
+    case "mminus": v=computeLive(); if(v!==null&&isFinite(v)){S.mem-=v;save();toast("M = "+autoStr(S.mem,D.prec));} render(); break;
+    case "mstore": v=computeLive(); if(v!==null&&isFinite(v)){S.mem=v;save();toast("Αποθηκεύτηκε στη μνήμη");} render(); break;
     case "mr": ins(konst("M")); break;
     case "ran": ins(num(Math.random().toFixed(6))); break;
     case "menu": openSheet("menu"); break;
+    case "cnst": openSheet("cnst"); break;
+    case "conv": openSheet("conv"); break;
     case "eq": eq(false); break;
   }
 }
 function eq(collapse){
   S.err = false;
-  const v = live();
+  const v = computeLive();
   if(v === null){
     S.err = true;
     S.errMsg = lastErr;
@@ -1372,7 +1414,7 @@ const SCI = [
 [{l:"DRG",s:"HYP",a:"drg",sa:"hyp"},{l:"S⇔D",s:"FSE",a:"sd",sa:"fse"},{l:"∫dx",s:"d/dx",i:"int",si:"der"},{l:"Σ",s:"Π",i:"sum",si:"prod"},{l:"d/c",s:"a b/c",i:"frac",si:"mixed"},{l:"X",s:"Y",i:"X",si:"Y"}],
 [{l:"π",s:"e",i:"π",si:"e"},{t:"trig",base:"sin",l:"sin",s:"sin⁻¹"},{t:"trig",base:"cos",l:"cos",s:"cos⁻¹"},{t:"trig",base:"tan",l:"tan",s:"tan⁻¹"},{l:"logₓy",s:"abs",i:"logxy",si:"abs"},{l:"%",s:"mod",i:"%",si:"mod"}],
 [{l:"x⁻¹",s:"n!",i:"inv",si:"!"},{l:"x²",s:"x³",i:"pow2",si:"pow3"},{l:"√",s:"∛",i:"sqrt",si:"cbrt"},{l:"xʸ",s:"ˣ√y",i:"pow",si:"nroot"},{l:"log",s:"10ˣ",i:"log",si:"10^"},{l:"ln",s:"eˣ",i:"ln",si:"e^"}],
-[{l:"CNST",s:"CONV",a:"menu",sa:"menu",c:"fnk",tab:"cnst"},{l:"D°M'S",s:"→DMS",i:"dms",sa:"dmsout"},{l:"MR",s:"x→M",a:"mr",sa:"mstore"},{l:"M+",s:"M−",a:"mplus",sa:"mminus"},{l:"Ans",s:"ran#",i:"Ans",sa:"ran"},{l:"nCr",s:"nPr",i:"nCr",si:"nPr"}]
+[{l:"CNST",s:"CONV",a:"cnst",sa:"conv",c:"fnk"},{l:"D°M'S",s:"→DMS",i:"dms",sa:"dmsout"},{l:"MR",s:"x→M",a:"mr",sa:"mstore"},{l:"M+",s:"M−",a:"mplus",sa:"mminus"},{l:"Ans",s:"ran#",i:"Ans",sa:"ran"},{l:"nCr",s:"nPr",i:"nCr",si:"nPr"}]
 ];
 const DIG = [
 [{l:"7",i:"7"},{l:"8",i:"8"},{l:"9",i:"9"},{l:"(",i:"("},{l:")",i:")"}],
@@ -1380,6 +1422,9 @@ const DIG = [
 [{l:"1",i:"1"},{l:"2",i:"2"},{l:"3",i:"3"},{l:"+",s:"▶DEC",i:"+",sa:"dec"},{l:"−",s:"▶HEX",i:"−",sa:"hex"}],
 [{l:"0",s:"∞",i:"0",si:"∞"},{l:".",i:"."},{l:"±",a:"neg"},{l:"EXP",i:"exp10"},{l:"=",s:",",a:"eq",sa:"comma",c:"eq"}]
 ];
+function hasAlt(k){
+  return k.si !== undefined || k.sa !== undefined || k.t === "trig";
+}
 function mkKeys(rows, host, dig){
   for(const row of rows) for(const k of row){
     const b = el("button","k"+(k.c?" "+k.c:""));
@@ -1394,9 +1439,10 @@ function mkKeys(rows, host, dig){
     ml.textContent = k.l;
     b.appendChild(ml);
     b.addEventListener("pointerdown", ev=>ripple(b, ev));
+
     if(k.a === "eq"){
-      const hold = el("span","hold");
-      b.appendChild(hold);
+      const bar = el("span","holdbar");
+      b.appendChild(bar);
       let timer = null, fired = false;
       b.addEventListener("pointerdown", ()=>{
         fired = false;
@@ -1410,43 +1456,68 @@ function mkKeys(rows, host, dig){
       });
       const end = ()=>{ clearTimeout(timer); b.classList.remove("holding"); };
       b.addEventListener("pointerup", end);
-      b.addEventListener("pointerleave", end);
       b.addEventListener("pointercancel", end);
+      b.addEventListener("pointerleave", end);
       b.addEventListener("click", ()=>{
         if(fired){ fired = false; return; }
-        doKey(k);
+        execKey(k, false);
       });
       host.appendChild(b);
       continue;
     }
-    if(k.a === "del"){
+
+    if(k.a === "left" || k.a === "right"){
+      let t1 = null, t2 = null, repeated = false;
+      b.addEventListener("pointerdown", ()=>{
+        repeated = false;
+        t1 = setTimeout(()=>{
+          repeated = true;
+          t2 = setInterval(()=>execKey(k, false), 90);
+        }, 420);
+      });
+      const end = ()=>{ clearTimeout(t1); clearInterval(t2); };
+      b.addEventListener("pointerup", end);
+      b.addEventListener("pointercancel", end);
+      b.addEventListener("pointerleave", end);
+      b.addEventListener("click", ()=>{
+        if(repeated){ repeated = false; return; }
+        execKey(k, false);
+      });
+      host.appendChild(b);
+      continue;
+    }
+
+    if(hasAlt(k)){
+      const bar = el("span","holdbar");
+      b.appendChild(bar);
       let timer = null, fired = false;
       b.addEventListener("pointerdown", ()=>{
         fired = false;
-        timer = setTimeout(()=>{ fired = true; act("ac"); toast("Πλήρης καθαρισμός"); }, 650);
+        b.classList.add("holding");
+        timer = setTimeout(()=>{
+          fired = true;
+          b.classList.remove("holding");
+          vib(14);
+          if(ssGet("holdHint") !== "1"){
+            ssSet("holdHint","1");
+            toast("Κρατημένο πλήκτρο = λειτουργία SHIFT", 2600);
+          }
+          execKey(k, true);
+        }, 400);
       });
-      const end = ()=>clearTimeout(timer);
+      const end = ()=>{ clearTimeout(timer); b.classList.remove("holding"); };
       b.addEventListener("pointerup", end);
-      b.addEventListener("pointerleave", end);
       b.addEventListener("pointercancel", end);
+      b.addEventListener("pointerleave", end);
       b.addEventListener("click", ()=>{
         if(fired){ fired = false; return; }
-        doKey(k);
+        execKey(k, false);
       });
       host.appendChild(b);
       continue;
     }
-    if(k.tab){
-      b.addEventListener("click", ()=>{
-        S.shift = false;
-        vib(); clickSnd();
-        openSheet(S.shift ? "conv" : k.tab);
-      });
-      b.addEventListener("click", ()=>{});
-      host.appendChild(b);
-      continue;
-    }
-    b.addEventListener("click", ()=>doKey(k));
+
+    b.addEventListener("click", ()=>execKey(k, false));
     host.appendChild(b);
   }
 }
@@ -1470,18 +1541,31 @@ function fallbackCopy(s, done){
   try{ document.execCommand("copy"); done(); }catch(e){}
   ta.remove();
 }
+let resFired = false;
 resEl.addEventListener("click", ()=>{
+  if(resFired){ resFired = false; return; }
   if(resEl.dataset.v) copyText(resEl.dataset.v, "Αντιγράφηκε το αποτέλεσμα");
 });
 let resHold = null;
 resEl.addEventListener("pointerdown", ()=>{
+  resFired = false;
   resHold = setTimeout(()=>{
-    resHold = null;
+    resFired = true;
+    vib(14);
     copyText(treeToText(S.root), "Αντιγράφηκε η πράξη");
   }, 600);
 });
 resEl.addEventListener("pointerup", ()=>clearTimeout(resHold));
+resEl.addEventListener("pointercancel", ()=>clearTimeout(resHold));
 resEl.addEventListener("pointerleave", ()=>clearTimeout(resHold));
+
+exprBox.addEventListener("click", e=>{
+  if(e.target === exprBox || e.target.id === "expr" || e.target === exprIn){
+    S.cur = {arr:S.root, i:S.root.length};
+    S.fresh = false;
+    render();
+  }
+});
 
 /* ================= ΦΥΛΛΑ ================= */
 const sheet = document.getElementById("sheet");
@@ -1492,6 +1576,19 @@ const TABS = [["menu","Ρυθμίσεις"],["cnst","Σταθερές"],["conv",
 document.getElementById("pclose").innerHTML = IC.close;
 document.getElementById("pclose").addEventListener("click", ()=>sheet.hidden = true);
 sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.hidden = true; });
+
+let dragY = null;
+const phead = document.getElementById("phead");
+phead.addEventListener("pointerdown", e=>{ dragY = e.clientY; });
+phead.addEventListener("pointermove", e=>{
+  if(dragY !== null && e.clientY - dragY > 70){
+    dragY = null;
+    sheet.hidden = true;
+  }
+});
+phead.addEventListener("pointerup", ()=>dragY = null);
+phead.addEventListener("pointercancel", ()=>dragY = null);
+
 function row(label, ctrl){
   const r = el("div","row");
   const l = el("span");
@@ -1551,6 +1648,7 @@ function convCalc(cat,x,f,t){
 }
 function openSheet(tab){
   sheet.hidden = false;
+  if(tab !== "graph") gcanvas = null;
   tabsEl.innerHTML = "";
   for(const [id,label] of TABS){
     const b = el("button","tab"+(id===tab?" on":""));
@@ -1635,10 +1733,12 @@ function buildConv(){
   let cat = cats[0];
   const from = el("select"), to = el("select");
   const inp = document.createElement("input");
-  inp.type = "number"; inp.value = "1"; inp.inputMode = "decimal";
+  inp.type = "text";
+  inp.inputMode = "decimal";
+  inp.value = "1";
   const out = el("div","convout");
   function calc(){
-    const x = parseFloat(inp.value);
+    const x = parseFloat(inp.value.replace(",","."));
     if(Number.isNaN(x)){
       out.textContent = "—";
       delete out.dataset.v;
@@ -1667,7 +1767,10 @@ function buildConv(){
     to.selectedIndex = a;
     calc(); vib();
   });
-  inp.addEventListener("input", calc);
+  inp.addEventListener("input", ()=>{
+    if(inp.value.includes(",")) inp.value = inp.value.replace(/,/g,".");
+    calc();
+  });
   from.addEventListener("change", calc);
   to.addEventListener("change", calc);
   const ib = el("button","bigbtn go");
@@ -1733,25 +1836,32 @@ function buildHist(){
 
 /* ================= ΓΡΑΦΗΜΑ ================= */
 const G = {x0:-10, x1:10, y0:-6, y1:6, tx:null};
-let gcanvas = null, gctx = null, gread = null;
+let gcanvas = null, gctx = null, gread = null, gRaf = 0;
+function gSchedule(){
+  if(gRaf) return;
+  gRaf = requestAnimationFrame(()=>{ gRaf = 0; gDraw(); });
+}
 function gResize(){
   if(!gcanvas) return;
   const dpr = window.devicePixelRatio||1;
   const w = gcanvas.clientWidth, h = gcanvas.clientHeight;
+  if(w === 0 || h === 0) return;
   gcanvas.width = w*dpr;
   gcanvas.height = h*dpr;
   gctx.setTransform(dpr,0,0,dpr,0,0);
   gDraw();
 }
 function niceStep(range){
+  if(!(range > 0) || !isFinite(range)) return 1;
   const raw = range/6;
   const pow = Math.pow(10, Math.floor(Math.log10(raw)));
   for(const m of [1,2,5,10]) if(pow*m >= raw) return pow*m;
   return pow*10;
 }
 function gDraw(){
-  if(!gctx) return;
+  if(!gctx || !gcanvas) return;
   const W = gcanvas.clientWidth, H = gcanvas.clientHeight;
+  if(W === 0 || H === 0) return;
   const css = getComputedStyle(document.body);
   const acc = css.getPropertyValue("--accent1").trim();
   const acc2 = css.getPropertyValue("--accent2").trim();
@@ -1804,16 +1914,19 @@ function gDraw(){
       gctx.beginPath();
       gctx.arc(X(G.tx), Y(y), 5, 0, Math.PI*2);
       gctx.fill();
-      gread.textContent = "x = "+autoStr(G.tx,6)+"   y = "+autoStr(y,8);
-    } else gread.textContent = "x = "+autoStr(G.tx,6)+"   y = μη ορισμένο";
-  } else gread.textContent = "Πάτα την καμπύλη για τιμές · σύρε για μετακίνηση · τσίμπα για ζουμ";
+      if(gread) gread.textContent = "x = "+autoStr(G.tx,6)+"   y = "+autoStr(y,8);
+    } else if(gread) gread.textContent = "x = "+autoStr(G.tx,6)+"   y = μη ορισμένο";
+  } else if(gread) gread.textContent = "Πάτα την καμπύλη για τιμές · σύρε για μετακίνηση · τσίμπα για ζουμ";
 }
 function gZoom(f, cx, cy){
   const mx = cx===undefined ? (G.x0+G.x1)/2 : cx;
   const my = cy===undefined ? (G.y0+G.y1)/2 : cy;
-  G.x0 = mx+(G.x0-mx)*f; G.x1 = mx+(G.x1-mx)*f;
-  G.y0 = my+(G.y0-my)*f; G.y1 = my+(G.y1-my)*f;
-  gDraw();
+  const nx0 = mx+(G.x0-mx)*f, nx1 = mx+(G.x1-mx)*f;
+  const ny0 = my+(G.y0-my)*f, ny1 = my+(G.y1-my)*f;
+  const rx = nx1-nx0, ry = ny1-ny0;
+  if(rx < 1e-9 || rx > 1e12 || ry < 1e-9 || ry > 1e12) return;
+  G.x0 = nx0; G.x1 = nx1; G.y0 = ny0; G.y1 = ny1;
+  gSchedule();
 }
 function buildGraph(){
   ptitle.textContent = "Γράφημα της τρέχουσας πράξης ως f(X)";
@@ -1828,8 +1941,8 @@ function buildGraph(){
   };
   mkB("+ Ζουμ", ()=>gZoom(.75));
   mkB("− Ζουμ", ()=>gZoom(1.33));
-  mkB("⟲ Επαναφορά", ()=>{ Object.assign(G,{x0:-10,x1:10,y0:-6,y1:6,tx:null}); gDraw(); });
-  mkB("✕ Ίχνος", ()=>{ G.tx = null; gDraw(); });
+  mkB("⟲ Επαναφορά", ()=>{ Object.assign(G,{x0:-10,x1:10,y0:-6,y1:6,tx:null}); gSchedule(); });
+  mkB("✕ Ίχνος", ()=>{ G.tx = null; gSchedule(); });
   gread = el("div"); gread.id = "gread";
   pbody.append(wrap, tools, gread);
   gctx = gcanvas.getContext("2d");
@@ -1853,14 +1966,15 @@ function buildGraph(){
     if(pts.size === 1){
       const dx = e.clientX-lastX, dy = e.clientY-lastY;
       moved += Math.abs(dx)+Math.abs(dy);
-      G.x0 -= dx*(G.x1-G.x0)/W; G.x1 -= dx*(G.x1-G.x0)/W;
-      G.y0 += dy*(G.y1-G.y0)/H; G.y1 += dy*(G.y1-G.y0)/H;
+      const rx = G.x1-G.x0, ry = G.y1-G.y0;
+      G.x0 -= dx*rx/W; G.x1 -= dx*rx/W;
+      G.y0 += dy*ry/H; G.y1 += dy*ry/H;
       lastX = e.clientX; lastY = e.clientY;
-      gDraw();
+      gSchedule();
     } else if(pts.size === 2){
       const [a,b] = [...pts.values()];
       const d = Math.hypot(a.x-b.x, a.y-b.y);
-      if(lastDist > 0){
+      if(lastDist > 0 && d > 0){
         const r = gcanvas.getBoundingClientRect();
         const cx = G.x0+((a.x+b.x)/2-r.left)/W*(G.x1-G.x0);
         const cy = G.y1-((a.y+b.y)/2-r.top)/H*(G.y1-G.y0);
@@ -1874,10 +1988,14 @@ function buildGraph(){
     if(pts.size === 1 && moved < 6){
       const r = gcanvas.getBoundingClientRect();
       G.tx = G.x0+(e.clientX-r.left)/gcanvas.clientWidth*(G.x1-G.x0);
-      gDraw();
+      gSchedule();
     }
     pts.delete(e.pointerId);
     lastDist = 0;
+    if(pts.size === 1){
+      const [p] = [...pts.values()];
+      lastX = p.x; lastY = p.y;
+    }
   };
   gcanvas.addEventListener("pointerup", up);
   gcanvas.addEventListener("pointercancel", up);
@@ -1905,7 +2023,7 @@ function cmpVer(a,b){
   return 0;
 }
 function askUpdate(){
-  if(sessionStorage.getItem("updOk") === "1") return doCheck();
+  if(ssGet("updOk") === "1") return doCheck();
   mcard.innerHTML = "";
   const h = el("h3"); h.textContent = "Πρόσβαση στο διαδίκτυο";
   const p = el("p");
@@ -1919,7 +2037,7 @@ function askUpdate(){
   no.addEventListener("click", closeModal);
   const yes = el("button","go"); yes.textContent = "Αποδοχή";
   yes.addEventListener("click", ()=>{
-    if(cb.checked) sessionStorage.setItem("updOk","1");
+    if(cb.checked) ssSet("updOk","1");
     closeModal();
     doCheck();
   });
@@ -1936,6 +2054,7 @@ async function doCheck(){
     const res = await fetch("version.json?t="+Date.now(), {cache:"no-store"});
     if(!res.ok) throw 0;
     const j = await res.json();
+    if(typeof j.version !== "string") throw 0;
     btn.classList.remove("spin");
     if(cmpVer(j.version, APP_VERSION) > 0){
       mcard.innerHTML = "";
@@ -1999,7 +2118,10 @@ document.getElementById("sndbtn").addEventListener("click", ()=>{
 });
 
 /* ================= ΠΛΗΚΤΡΟΛΟΓΙΟ ================= */
-document.addEventListener("contextmenu", e=>e.preventDefault());
+document.addEventListener("contextmenu", e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  e.preventDefault();
+});
 document.addEventListener("keydown", e=>{
   if(!sheet.hidden || !modal.hidden) return;
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
@@ -2023,6 +2145,18 @@ document.addEventListener("keydown", e=>{
   else return;
   e.preventDefault();
 });
+
+/* ================= VISUAL VIEWPORT (ΠΛΗΚΤΡΟΛΟΓΙΟ ΟΘΟΝΗΣ) ================= */
+function fitVV(){
+  const vv = window.visualViewport;
+  if(!vv) return;
+  document.documentElement.style.setProperty("--vvh", vv.height+"px");
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize", fitVV);
+  window.visualViewport.addEventListener("scroll", fitVV);
+}
+fitVV();
 
 /* ================= ΕΚΚΙΝΗΣΗ ================= */
 (function init(){

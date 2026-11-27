@@ -234,7 +234,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.3.1";
+const APP_VERSION = "3.3.2";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -599,6 +599,7 @@ function op(v){
 function neg(){
   pushUndo();
   beginEdit("val");
+  if(S.cur.off !== undefined){ S.cur.arr[S.cur.i].neg = !S.cur.arr[S.cur.i].neg; render(); return; }
   const p = S.cur.arr[S.cur.i-1];
   if(p && p.t === "num") p.neg = !p.neg;
   else {
@@ -943,14 +944,16 @@ function integ(lo, hi, f){
     return integ(-Infinity,0,f) + integ(0,Infinity,f);
   if(hi === Infinity){
     const g = t=>f(lo + t/(1-t))/((1-t)*(1-t));
-    return simpson(g, 0, 1-1e-7, 2000);
+    const r = simpson(g, 0, 1-1e-7, 2000);
+    if(!isFinite(r) || Math.abs(r) > 1e12) throw E_DIV;
+    return r;
   }
   if(lo === -Infinity){
     const g = t=>f(hi - t/(1-t))/((1-t)*(1-t));
-    return simpson(g, 0, 1-1e-7, 2000);
+    const r = simpson(g, 0, 1-1e-7, 2000);
+    if(!isFinite(r) || Math.abs(r) > 1e12) throw E_DIV;
+    return r;
   }
-  return simpson(f, lo, hi, 1000);
-}
 function computeLive(){
   try{
     const v = evArr(S.root, {});
@@ -1343,7 +1346,7 @@ function render(){
     resEl.textContent = S.errMsg||"Σφάλμα";
     resEl.classList.add("err");
     resEl.dataset.v = "";
-  } else resultContent(liveCached(serialize()));
+  } else resultContent(liveCached(serialize()+"|"+D.angle+"|"+S.ans+"|"+S.mem+"|"+S.vx+"|"+S.vy));
   document.getElementById("sndbtn").innerHTML = D.sound?IC.sndOn:IC.sndOff;
   saveExpr();
 }

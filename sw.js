@@ -1,4 +1,4 @@
-const C = "calc-v1";
+const C = "calc-v2";
 const A = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(A)).then(() => self.skipWaiting()));

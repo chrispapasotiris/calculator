@@ -234,7 +234,7 @@ body.nomotion *{animation:none!important;transition:none!important}
 <div id="toast"></div>
 <script>
 "use strict";
-const APP_VERSION = "3.3.2";
+const APP_VERSION = "3.3.3";
 
 /* ================= ΚΑΤΑΣΤΑΣΗ ================= */
 const D = {
@@ -954,6 +954,8 @@ function integ(lo, hi, f){
     if(!isFinite(r) || Math.abs(r) > 1e12) throw E_DIV;
     return r;
   }
+  return simpson(f, lo, hi, 1000);
+}
 function computeLive(){
   try{
     const v = evArr(S.root, {});

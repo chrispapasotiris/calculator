@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a1c3f">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Κομπιουτεράκι</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#0a1c3f,#15417f);font-family:system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow:hidden}
+[hidden]{display:none!important}
+#display{position:relative;flex:0 0 auto;height:23vh;min-height:140px;background:#07142e;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 4px);padding:8px 12px;display:flex;flex-direction:column;border-bottom:2px solid #2a5db0}
+#ind{color:#9fe8a0;font-size:13px;letter-spacing:1px;min-height:16px;white-space:pre}
+#expr{flex:1;display:flex;align-items:center;justify-content:flex-end;font-size:24px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+#expr::-webkit-scrollbar,#res::-webkit-scrollbar{display:none}
+#res{font-size:38px;color:#b8e986;text-align:right;min-height:46px;line-height:46px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+#res.err{color:#ff5f6d;font-size:26px}
+.cur{display:inline-block;width:2px;height:24px;background:#b8e986;margin:0 1px;animation:bl 1s steps(2) infinite;vertical-align:middle}
+@keyframes bl{50%{opacity:0}}
+#keys{flex:1;display:flex;flex-direction:column;gap:5px;padding:6px;min-height:0}
+.sci{flex:1.05;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(4,1fr);gap:5px}
+.dig{flex:1;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);gap:5px}
+button{border:1px solid #23477f;background:#0f2650;color:#fff;border-radius:6px;font-size:17px;font-family:inherit;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:0}
+button:active{background:#1c3d78}
+.sl{font-size:10px;color:#8fd694;line-height:10px;height:11px}
+.dig button{font-size:23px;background:#0c1e42}
+.fn{font-size:14px}
+.red{color:#ff5f6d}
+.eq{background:#173a75}
+#shiftBtn.on{background:#1e5c34;border-color:#3f9e5f}
+#hist{position:absolute;inset:0;background:rgba(7,18,42,.97);display:flex;flex-direction:column;z-index:5}
+.hhead{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;color:#9fe8a0;font-size:14px}
+.hhead button{font-size:12px;padding:4px 10px;background:#3a1420;border-color:#7f2330;color:#ff8f9a}
+#hlist{flex:1;overflow-y:auto;padding:0 10px}
+.hrow{padding:6px 4px;border-bottom:1px solid #14305e;text-align:right}
+.he{color:#8fa8cf;font-size:13px;word-break:break-all}
+.hrow b{display:block;color:#b8e986;font-size:18px;font-weight:600}
+@media(max-height:640px){#res{font-size:30px}#expr{font-size:19px}button{font-size:14px}.dig button{font-size:19px}}
+</style>
+</head>
+<body>
+<div id="display">
+  <div id="ind"></div>
+  <div id="expr"></div>
+  <div id="res">0</div>
+  <div id="hist" hidden>
+    <div class="hhead"><span>Ιστορικό</span><button id="hclear">Διαγραφή</button></div>
+    <div id="hlist"></div>
+  </div>
+</div>
+<div id="keys">
+  <div class="sci" id="sci"></div>
+  <div class="dig" id="dig"></div>
+</div>
+<script>
+"use strict";
+const S={expr:"",cur:0,shift:false,hyp:false,just:false,err:false,angle:"DEG",ans:0,mem:0,hist:[]};
+try{const d=JSON.parse(localStorage.getItem("sciCalc"));if(d){S.ans=d.ans||0;S.mem=d.mem||0;S.angle=d.angle||"DEG";S.hist=d.hist||[];}}catch(e){}
+function save(){try{localStorage.setItem("sciCalc",JSON.stringify({ans:S.ans,mem:S.mem,angle:S.angle,hist:S.hist}));}catch(e){}}
+
+const SCI=[
+[{l:"SHIFT",a:"shift",c:"fn"},{l:"HIST",a:"hist",c:"fn"},{l:"◀",a:"left",c:"fn"},{l:"▶",a:"right",c:"fn"},{l:"⌫",a:"del",c:"fn red"},{l:"AC",a:"ac",c:"fn red"}],
+[{l:"DRG",s:"HYP",a:"drg",sa:"hyp"},{l:"d/dx",s:"∫dx",i:"d/dx(",si:"∫("},{l:"X",s:"ran#",i:"X",sa:"ran"},{l:"π",s:"e",i:"π",si:"e"},{l:"M+",s:"M−",a:"mplus",sa:"mminus"},{l:"MR",s:"x→M",i:"M",sa:"mstore"}],
+[{l:"sin",s:"sin⁻¹",i:"sin(",si:"asin(",t:"sin"},{l:"cos",s:"cos⁻¹",i:"cos(",si:"acos(",t:"cos"},{l:"tan",s:"tan⁻¹",i:"tan(",si:"atan(",t:"tan"},{l:"ln",s:"eˣ",i:"ln(",si:"e^("},{l:"log",s:"10ˣ",i:"log(",si:"10^("},{l:"logₓy",s:"abs",i:"logxy(",si:"abs("}],
+[{l:"x²",s:"x³",i:"^2",si:"^3"},{l:"√",s:"∛",i:"√(",si:"∛("},{l:"xʸ",s:"ˣ√y",i:"^",si:"root("},{l:"x⁻¹",s:"n!",i:"^(-1)",si:"!"},{l:"nCr",s:"nPr",i:"nCr(",si:"nPr("},{l:"mod",s:"%",i:" mod ",si:"%"}]
+];
+const DIG=[
+[{l:"7",i:"7"},{l:"8",i:"8"},{l:"9",i:"9"},{l:"(",i:"("},{l:")",i:")"}],
+[{l:"4",i:"4"},{l:"5",i:"5"},{l:"6",i:"6"},{l:"×",i:"×"},{l:"÷",i:"÷"}],
+[{l:"1",i:"1"},{l:"2",i:"2"},{l:"3",i:"3"},{l:"+",i:"+"},{l:"−",i:"−"}],
+[{l:"0",i:"0"},{l:".",i:"."},{l:"±",a:"neg"},{l:"EXP",i:"×10^("},{l:"=",s:"Ans",a:"eq",sa:"ans",c:"eq"}]
+];
+
+const FUN={sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,sinh:1,cosh:1,tanh:1,asinh:1,acosh:1,atanh:1,ln:1,log:1,"√":1,"∛":1,abs:1,root:2,logxy:2,nCr:2,nPr:2,"d/dx":2,"∫":3};
+
+function lex(s){
+  const T=[];let i=0;const isD=c=>c>="0"&&c<="9";
+  while(i<s.length){
+    const c=s[i];
+    if(c===" "){i++;continue;}
+    if(isD(c)||c==="."){
+      let j=i;while(j<s.length&&(isD(s[j])||s[j]==="."))j++;
+      if(s[j]==="E"){let k=j+1;if(s[k]==="−"||s[k]==="-"||s[k]==="+")k++;if(isD(s[k])){k++;while(k<s.length&&isD(s[k]))k++;j=k;}}
+      const v=Number(s.slice(i,j).replace(/−/g,"-"));
+      if(Number.isNaN(v))throw 0;
+      T.push({t:"n",v});i=j;continue;
+    }
+    if(s.startsWith("d/dx",i)){T.push({t:"f",v:"d/dx"});i+=4;continue;}
+    if(c==="∫"||c==="√"||c==="∛"){T.push({t:"f",v:c});i++;continue;}
+    if(c==="π"){T.push({t:"c",v:"π"});i++;continue;}
+    if(/[a-zA-Z]/.test(c)){
+      let j=i;while(j<s.length&&/[a-zA-Z]/.test(s[j]))j++;
+      const w=s.slice(i,j);i=j;
+      if(w==="mod"){T.push({t:"o",v:"mod"});continue;}
+      if(["e","X","Ans","M"].includes(w)){T.push({t:"c",v:w});continue;}
+      if(FUN[w]){T.push({t:"f",v:w});continue;}
+      throw 0;
+    }
+    if("+-−×÷*/^".includes(c)){T.push({t:"o",v:{"+":"+","-":"−","−":"−","×":"×","*":"×","÷":"÷","/":"÷","^":"^"}[c]});i++;continue;}
+    if(c==="("){T.push({t:"("});i++;continue;}
+    if(c===")"){T.push({t:")"});i++;continue;}
+    if(c===","){T.push({t:","});i++;continue;}
+    if(c==="!"||c==="%"){T.push({t:"p",v:c});i++;continue;}
+    throw 0;
+  }
+  const R=[];
+  for(const t of T){
+    const p=R[R.length-1];
+    if(p&&(p.t==="n"||p.t==="c"||p.t===")"||p.t==="p")&&(t.t==="n"||t.t==="c"||t.t==="f"||t.t==="("))R.push({t:"o",v:"×"});
+    R.push(t);
+  }
+  return R;
+}
+
+function parse(T){
+  let p=0;
+  const peek=()=>T[p];
+  const eat=t=>{if(!T[p]||T[p].t!==t)throw 0;return T[p++];};
+  function expr(){let a=term();while(peek()&&peek().t==="o"&&(peek().v==="+"||peek().v==="−")){const o=T[p++].v;a={k:"b",o,a,b:term()};}return a;}
+  function term(){let a=unary();while(peek()&&peek().t==="o"&&["×","÷","mod"].includes(peek().v)){const o=T[p++].v;a={k:"b",o,a,b:unary()};}return a;}
+  function unary(){if(peek()&&peek().t==="o"&&(peek().v==="−"||peek().v==="+")){const o=T[p++].v;const a=unary();return o==="−"?{k:"neg",a}:a;}return pow();}
+  function pow(){let a=post();if(peek()&&peek().t==="o"&&peek().v==="^"){p++;a={k:"b",o:"^",a,b:unary()};}return a;}
+  function post(){let a=prim();while(peek()&&peek().t==="p"){a={k:"p",o:T[p++].v,a};}return a;}
+  function prim(){
+    const t=peek();if(!t)throw 0;
+    if(t.t==="n"){p++;return{k:"n",v:t.v};}
+    if(t.t==="c"){p++;return{k:"c",v:t.v};}
+    if(t.t==="("){p++;const a=expr();eat(")");return a;}
+    if(t.t==="f"){p++;eat("(");const args=[expr()];while(peek()&&peek().t===","){p++;args.push(expr());}eat(")");if(FUN[t.v]!==args.length)throw 0;return{k:"f",v:t.v,args};}
+    throw 0;
+  }
+  const a=expr();if(p!==T.length)throw 0;return a;
+}
+
+function fact(v){if(v<0||Math.abs(v-Math.round(v))>1e-9)throw 0;v=Math.round(v);if(v>170)return Infinity;let r=1;for(let i=2;i<=v;i++)r*=i;return r;}
+function nCr(n,r){if(!Number.isInteger(n)||!Number.isInteger(r)||n<0||r<0||r>n)throw 0;r=Math.min(r,n-r);let x=1;for(let i=1;i<=r;i++)x=x*(n-r+i)/i;return Math.round(x);}
+function nPr(n,r){if(!Number.isInteger(n)||!Number.isInteger(r)||n<0||r<0||r>n)throw 0;let x=1;for(let i=0;i<r;i++)x*=(n-i);return x;}
+
+function ev(n,x){
+  const ang=()=>S.angle==="DEG"?Math.PI/180:S.angle==="GRAD"?Math.PI/200:1;
+  const cl=v=>Math.abs(v)<1e-12?0:v;
+  switch(n.k){
+    case"n":return n.v;
+    case"c":
+      if(n.v==="π")return Math.PI;
+      if(n.v==="e")return Math.E;
+      if(n.v==="Ans")return S.ans;
+      if(n.v==="M")return S.mem;
+      if(x===undefined)throw 0;
+      return x;
+    case"neg":return -ev(n.a,x);
+    case"b":{
+      const l=ev(n.a,x),r=ev(n.b,x);
+      switch(n.o){case"+":return l+r;case"−":return l-r;case"×":return l*r;case"÷":return l/r;case"mod":return l%r;case"^":return Math.pow(l,r);}
+    }
+    case"p":{const v=ev(n.a,x);return n.o==="!"?fact(v):v/100;}
+    case"f":{
+      if(n.v==="d/dx"){const c=ev(n.args[1],x);const h=1e-5*Math.max(1,Math.abs(c));return(ev(n.args[0],c+h)-ev(n.args[0],c-h))/(2*h);}
+      if(n.v==="∫"){
+        const A=ev(n.args[1],x),B=ev(n.args[2],x);
+        if(A===B)return 0;
+        const N=1000,h=(B-A)/N;
+        let s=ev(n.args[0],A)+ev(n.args[0],B);
+        for(let i=1;i<N;i++)s+=ev(n.args[0],A+i*h)*(i%2?4:2);
+        return s*h/3;
+      }
+      const v=n.args.map(a=>ev(a,x)),a=v[0];
+      switch(n.v){
+        case"sin":return cl(Math.sin(a*ang()));
+        case"cos":return cl(Math.cos(a*ang()));
+        case"tan":{const r=Math.tan(a*ang());return Math.abs(r)>1e15?(r>0?Infinity:-Infinity):cl(r);}
+        case"asin":return cl(Math.asin(a)/ang());
+        case"acos":return Math.acos(a)/ang();
+        case"atan":return cl(Math.atan(a)/ang());
+        case"sinh":return Math.sinh(a);case"cosh":return Math.cosh(a);case"tanh":return Math.tanh(a);
+        case"asinh":return Math.asinh(a);case"acosh":return Math.acosh(a);case"atanh":return Math.atanh(a);
+        case"ln":return Math.log(a);case"log":return Math.log10(a);
+        case"√":return Math.sqrt(a);case"∛":return Math.cbrt(a);case"abs":return Math.abs(a);
+        case"root":{const nn=v[0],y=v[1];if(y<0&&Number.isInteger(nn)&&nn%2!==0)return -Math.pow(-y,1/nn);return Math.pow(y,1/nn);}
+        case"logxy":return Math.log(v[1])/Math.log(v[0]);
+        case"nCr":return nCr(v[0],v[1]);
+        case"nPr":return nPr(v[0],v[1]);
+      }
+    }
+  }
+  throw 0;
+}
+
+function calc(){
+  if(!S.expr.trim())return null;
+  try{const v=ev(parse(lex(S.expr)));return typeof v==="number"?v:null;}catch(e){return null;}
+}
+
+function fmt(v){
+  if(Number.isNaN(v))return "Σφάλμα";
+  if(!isFinite(v))return v>0?"∞":"−∞";
+  v=parseFloat(v.toPrecision(12));
+  if(Number.isInteger(v)&&Math.abs(v)<1e15)return String(v).replace("-","−");
+  const a=Math.abs(v);let s;
+  if(a>=1e12||a<1e-6){
+    s=v.toExponential(9);
+    let[m,ex]=s.split("e");
+    if(m.includes("."))m=m.replace(/0+$/,"").replace(/\.$/,"");
+    s=m+"E"+(ex.startsWith("-")?"−":"")+Math.abs(parseInt(ex));
+  }else{
+    s=String(v);
+    if(s.includes("."))s=s.replace(/0+$/,"").replace(/\.$/,"");
+  }
+  return s.replace("-","−");
+}
+
+const exprEl=document.getElementById("expr"),resEl=document.getElementById("res"),indEl=document.getElementById("ind"),histEl=document.getElementById("hist"),hlist=document.getElementById("hlist");
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function render(){
+  indEl.textContent="∠ "+S.angle+(S.hyp?"  HYP":"")+(S.shift?"  SHIFT":"")+(S.mem!==0?"  M":"");
+  const sb=document.getElementById("shiftBtn");if(sb)sb.classList.toggle("on",S.shift);
+  exprEl.innerHTML=esc(S.expr.slice(0,S.cur))+'<span class="cur"></span>'+esc(S.expr.slice(S.cur));
+  const c=exprEl.querySelector(".cur");
+  if(c)exprEl.scrollLeft=Math.max(0,c.offsetLeft-exprEl.clientWidth*0.6);
+  resEl.classList.remove("err");
+  if(S.err){resEl.textContent="Σφάλμα";resEl.classList.add("err");}
+  else if(S.just){resEl.textContent=fmt(S.ans);}
+  else{const v=calc();resEl.textContent=v==null?(S.expr?"":"0"):fmt(v);}
+}
+
+function ins(t){
+  if(S.just){
+    const op=/^[+×÷^!%]/.test(t)||t==="−"||t.startsWith(" mod");
+    if(op){S.expr="Ans";S.cur=3;}else{S.expr="";S.cur=0;}
+    S.just=false;
+  }
+  S.expr=S.expr.slice(0,S.cur)+t+S.expr.slice(S.cur);
+  S.cur+=t.length;
+  render();
+}
+
+function openHist(){
+  histEl.hidden=false;hlist.innerHTML="";
+  if(!S.hist.length)hlist.innerHTML='<div class="he" style="padding:10px">Κενό</div>';
+  for(const h of S.hist){
+    const d=document.createElement("div");d.className="hrow";
+    d.innerHTML='<div class="he">'+esc(h.e)+'</div><b>'+esc(h.r)+'</b>';
+    d.addEventListener("click",()=>{histEl.hidden=true;if(!/∞|Σφάλμα/.test(h.r))ins(h.r);});
+    hlist.appendChild(d);
+  }
+}
+document.getElementById("hclear").addEventListener("click",()=>{S.hist=[];save();openHist();});
+
+function act(a){
+  let v;
+  switch(a){
+    case"hist":histEl.hidden?openHist():histEl.hidden=true;break;
+    case"drg":S.angle=S.angle==="DEG"?"RAD":S.angle==="RAD"?"GRAD":"DEG";save();render();break;
+    case"hyp":S.hyp=!S.hyp;render();break;
+    case"left":S.just=false;S.cur=Math.max(0,S.cur-1);render();break;
+    case"right":S.just=false;S.cur=Math.min(S.expr.length,S.cur+1);render();break;
+    case"del":S.just=false;if(S.cur>0){S.expr=S.expr.slice(0,S.cur-1)+S.expr.slice(S.cur);S.cur--;}render();break;
+    case"ac":S.expr="";S.cur=0;S.just=false;S.hyp=false;render();break;
+    case"mplus":v=calc();if(v!=null&&isFinite(v)){S.mem+=v;save();}render();break;
+    case"mminus":v=calc();if(v!=null&&isFinite(v)){S.mem-=v;save();}render();break;
+    case"mstore":v=calc();if(v!=null&&isFinite(v)){S.mem=v;save();}render();break;
+    case"ran":ins(Math.random().toFixed(6));break;
+    case"ans":ins("Ans");break;
+    case"neg":{
+      if(S.just){S.expr="−Ans";S.cur=4;S.just=false;render();break;}
+      const before=S.expr.slice(0,S.cur);
+      const m=/(\d+\.?\d*|\.\d+)$/.exec(before);
+      if(m){
+        const st=S.cur-m[0].length;
+        if(st>0&&S.expr[st-1]==="−"&&(st-1===0||"+−×÷^(,".includes(S.expr[st-2]))){
+          S.expr=S.expr.slice(0,st-1)+S.expr.slice(st);S.cur--;
+        }else{S.expr=S.expr.slice(0,st)+"−"+S.expr.slice(st);S.cur++;}
+      }else{S.expr=S.expr.slice(0,S.cur)+"−"+S.expr.slice(S.cur);S.cur++;}
+      render();break;
+    }
+    case"eq":{
+      if(S.just)break;
+      v=calc();
+      if(v==null||Number.isNaN(v)){S.err=true;render();break;}
+      S.ans=v;S.hist.unshift({e:S.expr,r:fmt(v)});
+      if(S.hist.length>50)S.hist.pop();
+      S.just=true;save();render();break;
+    }
+  }
+}
+
+function press(k){
+  S.err=false;
+  if(k.a!=="hist")histEl.hidden=true;
+  if(k.a==="shift"){S.shift=!S.shift;render();return;}
+  const sh=S.shift;S.shift=false;
+  if(k.t){const name=(sh?"a":"")+k.t+(S.hyp?"h":"");S.hyp=false;ins(name+"(");return;}
+  if(k.i!==undefined){ins(sh&&k.si!==undefined?k.si:k.i);return;}
+  act(sh&&k.sa?k.sa:k.a);
+}
+
+function mk(rows,host,dig){
+  for(const row of rows)for(const k of row){
+    const b=document.createElement("button");
+    if(k.c)b.className=k.c;
+    if(k.a==="shift")b.id="shiftBtn";
+    if(!dig||k.s){const sl=document.createElement("span");sl.className="sl";sl.textContent=k.s||"";b.appendChild(sl);}
+    const ml=document.createElement("span");ml.textContent=k.l;b.appendChild(ml);
+    b.addEventListener("click",()=>press(k));
+    host.appendChild(b);
+  }
+}
+mk(SCI,document.getElementById("sci"),false);
+mk(DIG,document.getElementById("dig"),true);
+
+document.addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("keydown",e=>{
+  const k=e.key;
+  if(/^[0-9.+\-*/^()!%]$/.test(k)){ins({"-":"−","*":"×","/":"÷"}[k]||k);e.preventDefault();}
+  else if(k==="Enter"||k==="="){act("eq");e.preventDefault();}
+  else if(k==="Backspace"){act("del");e.preventDefault();}
+  else if(k==="ArrowLeft")act("left");
+  else if(k==="ArrowRight")act("right");
+});
+
+render();
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
